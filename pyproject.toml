@@ -1,0 +1,42 @@
+[project]
+name = "that-game"
+version = "0.0.1"
+description = "Add your description here"
+authors = [
+    { name = "tanzhijian", email = "tanzhijianorg@outlook.com" }
+]
+dependencies = [
+    "pydantic>=2.7.3",
+]
+readme = "README.md"
+requires-python = ">= 3.10"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.rye]
+managed = true
+dev-dependencies = [
+    "ruff>=0.4.7",
+    "mypy>=1.10.0",
+    "pytest>=8.2.2",
+]
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/that_game"]
+
+
+[tool.ruff]
+lint.select = ["E", "F", "I"]
+line-length = 88
+
+[tool.mypy]
+ignore_missing_imports = true
+strict = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests",]
