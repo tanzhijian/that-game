@@ -2,6 +2,8 @@ from datetime import datetime
 
 from pydantic import BaseModel, computed_field
 
+from ._status import EventType
+
 
 class Competition(BaseModel):
     id: str
@@ -31,7 +33,7 @@ class PlayGround(BaseModel):
 
 class Event(BaseModel):
     id: str
-    type: str
+    type: EventType
     timestamp: float
     team: Team
     player: Player

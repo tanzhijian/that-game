@@ -8,6 +8,7 @@ from that_game._models import (
     Position,
     Team,
 )
+from that_game._status import EventType
 
 
 class TestGame:
@@ -23,7 +24,7 @@ class TestGame:
         events = [
             Event(
                 id="0001",
-                type="shot",
+                type=EventType.SHOT,
                 timestamp=62.0,
                 team=home_team,
                 player=home_players[0],
@@ -46,3 +47,8 @@ class TestGame:
         assert game.id == "ars_vs_mci"
         assert game.date == "2024-03-31"
         assert game.time == "11:30"
+
+    def test_game_event(self, game: Game) -> None:
+        shots = [event for event in game.events if event.type == EventType.SHOT]
+        shot = shots[0]
+        assert int(shot.position.x) == 100
