@@ -30,6 +30,16 @@ class PlayGround(BaseModel):
 class Position(BaseModel):
     x: float
     y: float
+    playground: PlayGround
+
+    def transform(self, playground: PlayGround) -> "Position":
+        x_ratio = playground.length / self.playground.length
+        y_ratio = playground.width / self.playground.width
+        return Position(
+            x=self.x * x_ratio,
+            y=self.y * y_ratio,
+            playground=playground,
+        )
 
 
 class Event(BaseModel):

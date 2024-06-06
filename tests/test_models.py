@@ -28,7 +28,7 @@ class TestGame:
                 timestamp=62.0,
                 team=home_team,
                 player=home_players[0],
-                position=Position(x=100.1, y=43.2),
+                position=Position(x=100.1, y=43.2, playground=playground),
                 body_part=BodyPart.LEFT_FOOT,
             )
         ]
@@ -56,7 +56,19 @@ class TestGame:
 
     def test_model_dump_pandas(self, game: Game) -> None:
         df = game.model_dump_pandas()
-        assert df.shape == (1, 11)
+        assert df.shape == (1, 13)
         event = df.iloc[0]
         assert event["id"] == "0001"
         assert event["team.name"] == "Arsenal"
+
+
+class TestPosition:
+    @pytest.fixture(scope="class")
+    def position(self) -> Position:
+        return Position(x=0.5, y=0.6, playground=PlayGround(length=1, width=1))
+
+    def test_transform(self, position: Position) -> None:
+        playground = PlayGround(length=100, width=100)
+        new = position.transform(playground)
+        assert int(new.x) == 50
+        assert int(new.y) == 60
