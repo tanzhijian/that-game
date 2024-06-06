@@ -1,8 +1,9 @@
 from datetime import datetime
 
+import pandas as pd
 from pydantic import BaseModel, computed_field
 
-from ._status import EventType
+from ._status import BodyPart, EventType
 
 
 class Competition(BaseModel):
@@ -21,14 +22,14 @@ class Team(BaseModel):
     name: str
 
 
-class Position(BaseModel):
-    x: float
-    y: float
-
-
 class PlayGround(BaseModel):
     length: int
     width: int
+
+
+class Position(BaseModel):
+    x: float
+    y: float
 
 
 class Event(BaseModel):
@@ -38,6 +39,7 @@ class Event(BaseModel):
     team: Team
     player: Player
     position: Position
+    body_part: BodyPart
 
 
 class Game(BaseModel):
@@ -60,3 +62,8 @@ class Game(BaseModel):
     @property
     def time(self) -> str:
         return self.datetime.strftime("%H:%M")
+
+    def model_dump_pandas(self) -> pd.DataFrame:
+        events_dict = self.model_dump()["events"]
+        df = pd.json_normalize(events_dict)
+        return df

@@ -8,7 +8,7 @@ from that_game._models import (
     Position,
     Team,
 )
-from that_game._status import EventType
+from that_game._status import BodyPart, EventType
 
 
 class TestGame:
@@ -29,6 +29,7 @@ class TestGame:
                 team=home_team,
                 player=home_players[0],
                 position=Position(x=100.1, y=43.2),
+                body_part=BodyPart.LEFT_FOOT,
             )
         ]
         return Game(
@@ -52,3 +53,10 @@ class TestGame:
         shots = [event for event in game.events if event.type == EventType.SHOT]
         shot = shots[0]
         assert int(shot.position.x) == 100
+
+    def test_model_dump_pandas(self, game: Game) -> None:
+        df = game.model_dump_pandas()
+        assert df.shape == (1, 11)
+        event = df.iloc[0]
+        assert event["id"] == "0001"
+        assert event["team.name"] == "Arsenal"
