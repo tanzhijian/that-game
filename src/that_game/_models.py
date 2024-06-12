@@ -3,7 +3,7 @@ from datetime import datetime
 import pandas as pd
 from pydantic import BaseModel, computed_field
 
-from ._status import BodyPart, EventType
+from ._status import BodyPart, EventType, ShotResult
 
 
 class Competition(BaseModel):
@@ -50,6 +50,7 @@ class Event(BaseModel):
     player: Player
     position: Position
     body_part: BodyPart
+    result: ShotResult
 
 
 class Game(BaseModel):

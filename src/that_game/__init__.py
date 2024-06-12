@@ -7,7 +7,7 @@ from ._models import (
     Position,
     Team,
 )
-from ._status import BodyPart, EventType
+from ._status import BodyPart, EventType, ShotResult
 
 __all__ = (
     "Competition",
@@ -19,4 +19,5 @@ __all__ = (
     "Team",
     "EventType",
     "BodyPart",
+    "ShotResult",
 )
