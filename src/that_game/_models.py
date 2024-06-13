@@ -45,7 +45,10 @@ class Position:
         self,
         x: float,
         y: float,
-        playground: Playground | dict[str, typing.Any],
+        playground: Playground
+        | dict[str, typing.Any]
+        | tuple[typing.Any, ...]
+        | list[typing.Any],
     ) -> None:
         self.x = x
         self.y = y
@@ -60,7 +63,10 @@ class Position:
 
     def transform(
         self,
-        playground: Playground | dict[str, typing.Any],
+        playground: Playground
+        | dict[str, typing.Any]
+        | tuple[typing.Any, ...]
+        | list[typing.Any],
     ) -> "Position":
         playground = get_instance(playground, Playground)
         x_ratio = playground.length / self.playground.length
@@ -78,9 +84,18 @@ class Event:
         id: str,
         type: EventType | str,
         timestamp: float,
-        team: Team | dict[str, typing.Any],
-        player: Player | dict[str, typing.Any],
-        position: Position | dict[str, typing.Any],
+        team: Team
+        | dict[str, typing.Any]
+        | tuple[typing.Any, ...]
+        | list[typing.Any],
+        player: Player
+        | dict[str, typing.Any]
+        | tuple[typing.Any, ...]
+        | list[typing.Any],
+        position: Position
+        | dict[str, typing.Any]
+        | tuple[typing.Any, ...]
+        | list[typing.Any],
         body_part: BodyPart | str,
         result: ShotResult | str,
     ) -> None:
@@ -162,9 +177,14 @@ T = typing.TypeVar("T")
 U = typing.TypeVar("U", bound=Enum)
 
 
-def get_instance(obj: T | dict[str, typing.Any], cls: type[T]) -> T:
+def get_instance(
+    obj: T | dict[str, typing.Any] | tuple[typing.Any, ...] | list[typing.Any],
+    cls: type[T],
+) -> T:
     if isinstance(obj, dict):
         return cls(**obj)
+    elif isinstance(obj, list) or isinstance(obj, tuple):
+        return cls(*obj)
     return obj
 
 
