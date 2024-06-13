@@ -8,6 +8,10 @@ import pandas as pd
 
 from ._status import BodyPart, EventType, ShotResult
 
+DataExtraTypes = (
+    dict[str, typing.Any] | tuple[typing.Any, ...] | list[typing.Any]
+)
+
 
 @dataclass
 class Metadata:
@@ -45,10 +49,7 @@ class Position:
         self,
         x: float,
         y: float,
-        playground: Playground
-        | dict[str, typing.Any]
-        | tuple[typing.Any, ...]
-        | list[typing.Any],
+        playground: Playground | DataExtraTypes,
     ) -> None:
         self.x = x
         self.y = y
@@ -63,10 +64,7 @@ class Position:
 
     def transform(
         self,
-        playground: Playground
-        | dict[str, typing.Any]
-        | tuple[typing.Any, ...]
-        | list[typing.Any],
+        playground: Playground | DataExtraTypes,
     ) -> "Position":
         playground = get_instance(playground, Playground)
         x_ratio = playground.length / self.playground.length
@@ -84,18 +82,9 @@ class Event:
         id: str,
         type: EventType | str,
         timestamp: float,
-        team: Team
-        | dict[str, typing.Any]
-        | tuple[typing.Any, ...]
-        | list[typing.Any],
-        player: Player
-        | dict[str, typing.Any]
-        | tuple[typing.Any, ...]
-        | list[typing.Any],
-        position: Position
-        | dict[str, typing.Any]
-        | tuple[typing.Any, ...]
-        | list[typing.Any],
+        team: Team | DataExtraTypes,
+        player: Player | DataExtraTypes,
+        position: Position | DataExtraTypes,
         body_part: BodyPart | str,
         result: ShotResult | str,
     ) -> None:
@@ -178,7 +167,7 @@ U = typing.TypeVar("U", bound=Enum)
 
 
 def get_instance(
-    obj: T | dict[str, typing.Any] | tuple[typing.Any, ...] | list[typing.Any],
+    obj: T | DataExtraTypes,
     cls: type[T],
 ) -> T:
     if isinstance(obj, dict):
