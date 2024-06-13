@@ -1,6 +1,13 @@
 import pytest
-from that_game._metadata import Competition, Player, Playground, Team
-from that_game._models import Event, Game, Position
+from that_game._models import (
+    Competition,
+    Event,
+    Game,
+    Player,
+    Playground,
+    Position,
+    Team,
+)
 from that_game._status import BodyPart, EventType, ShotResult
 
 

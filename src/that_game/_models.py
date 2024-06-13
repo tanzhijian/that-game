@@ -5,16 +5,57 @@ from datetime import datetime
 import arrow
 import pandas as pd
 
-from ._metadata import Competition, Player, Playground, Team
 from ._status import BodyPart, EventType, ShotResult
-from ._types import DateTimeTypes
 
 
 @dataclass
+class _Metadata:
+    def to_dict(self) -> dict[str, typing.Any]:
+        return asdict(self)
+
+
+@dataclass
+class Competition(_Metadata):
+    id: str
+    name: str
+
+
+@dataclass
+class Player(_Metadata):
+    id: str
+    name: str
+    role: str
+
+
+@dataclass
+class Team(_Metadata):
+    id: str
+    name: str
+
+
+@dataclass
+class Playground(_Metadata):
+    length: int
+    width: int
+
+
 class Position:
-    x: float
-    y: float
-    playground: Playground
+    def __init__(
+        self,
+        x: float,
+        y: float,
+        playground: Playground,
+    ) -> None:
+        self.x = x
+        self.y = y
+        self.playground = playground
+
+    def to_dict(self) -> dict[str, typing.Any]:
+        return {
+            "x": self.x,
+            "y": self.y,
+            "playground": self.playground.to_dict(),
+        }
 
     def transform(self, playground: Playground) -> "Position":
         x_ratio = playground.length / self.playground.length
@@ -52,9 +93,9 @@ class Event:
             "id": self.id,
             "type": self.type.value,
             "timestamp": self.timestamp,
-            "team": asdict(self.team),
-            "player": asdict(self.player),
-            "position": asdict(self.position),
+            "team": self.team.to_dict(),
+            "player": self.player.to_dict(),
+            "position": self.position.to_dict(),
             "body_part": self.body_part.value,
             "result": self.result.value,
         }
@@ -64,7 +105,7 @@ class Game:
     def __init__(
         self,
         id: str,
-        datetime: DateTimeTypes,
+        datetime: datetime | str,
         playground: Playground,
         home_team: Team,
         away_team: Team,
@@ -74,7 +115,7 @@ class Game:
         events: list[Event],
     ) -> None:
         self.id = id
-        self.datetime = self._parse_datetime(datetime)
+        self.datetime = arrow.get(datetime)
         self.playground = playground
         self.home_team = home_team
         self.away_team = away_team
@@ -83,26 +124,6 @@ class Game:
         self.competition = competition
         self.events = events
 
-    def _parse_datetime(self, dt: DateTimeTypes) -> datetime:
-        if isinstance(dt, str):
-            return arrow.get(dt).datetime
-        return dt
-
-    def to_dict(self) -> dict[str, typing.Any]:
-        return {
-            "id": self.id,
-            "datetime": self.datetime,
-            "date": self.date,
-            "time": self.time,
-            "playground": asdict(self.playground),
-            "home_team": asdict(self.home_team),
-            "away_team": asdict(self.away_team),
-            "home_players": [asdict(player) for player in self.home_players],
-            "away_players": [asdict(player) for player in self.away_players],
-            "competition": asdict(self.competition),
-            "events": [event.to_dict() for event in self.events],
-        }
-
     @property
     def date(self) -> str:
         return self.datetime.strftime("%Y-%m-%d")
@@ -110,6 +131,21 @@ class Game:
     @property
     def time(self) -> str:
         return self.datetime.strftime("%H:%M")
+
+    def to_dict(self) -> dict[str, typing.Any]:
+        return {
+            "id": self.id,
+            "datetime": self.datetime,
+            "date": self.date,
+            "time": self.time,
+            "playground": self.playground.to_dict(),
+            "home_team": self.home_team.to_dict(),
+            "away_team": self.away_team.to_dict(),
+            "home_players": [player.to_dict() for player in self.home_players],
+            "away_players": [player.to_dict() for player in self.away_players],
+            "competition": self.competition.to_dict(),
+            "events": [event.to_dict() for event in self.events],
+        }
 
     def to_pandas(self) -> pd.DataFrame:
         events_dict = self.to_dict()["events"]
