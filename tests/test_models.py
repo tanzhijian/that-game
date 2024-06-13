@@ -1,13 +1,6 @@
 import pytest
-from that_game._models import (
-    Competition,
-    Event,
-    Game,
-    Player,
-    PlayGround,
-    Position,
-    Team,
-)
+from that_game._metadata import Competition, Player, Playground, Team
+from that_game._models import Event, Game, Position
 from that_game._status import BodyPart, EventType, ShotResult
 
 
@@ -19,7 +12,7 @@ class TestGame:
         away_team = Team(id="mci", name="Man City")
         home_players = [Player(id="a7", name="Bukayo Saka", role="FW")]
         away_players = [Player(id="h9", name="Erling Haaland", role="FW")]
-        playground = PlayGround(length=108, width=68)
+        playground = Playground(length=108, width=68)
 
         events = [
             Event(
@@ -35,7 +28,7 @@ class TestGame:
         ]
         return Game(
             id="ars_vs_mci",
-            datetime="2024-03-31 11:30",  # type: ignore
+            datetime="2024-03-31 11:30",
             playground=playground,
             competition=competition,
             home_team=home_team,
@@ -56,7 +49,7 @@ class TestGame:
         assert int(shot.position.x) == 100
 
     def test_model_dump_pandas(self, game: Game) -> None:
-        df = game.model_dump_pandas()
+        df = game.to_pandas()
         assert df.shape == (1, 14)
         event = df.iloc[0]
         assert event["id"] == "0001"
@@ -66,10 +59,10 @@ class TestGame:
 class TestPosition:
     @pytest.fixture(scope="class")
     def position(self) -> Position:
-        return Position(x=0.5, y=0.6, playground=PlayGround(length=1, width=1))
+        return Position(x=0.5, y=0.6, playground=Playground(length=1, width=1))
 
     def test_transform(self, position: Position) -> None:
-        playground = PlayGround(length=100, width=100)
+        playground = Playground(length=100, width=100)
         new = position.transform(playground)
         assert int(new.x) == 50
         assert int(new.y) == 60

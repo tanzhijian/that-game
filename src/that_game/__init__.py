@@ -1,12 +1,5 @@
-from ._models import (
-    Competition,
-    Event,
-    Game,
-    Player,
-    PlayGround,
-    Position,
-    Team,
-)
+from ._metadata import Competition, Player, Playground, Team
+from ._models import Event, Game, Position
 from ._status import BodyPart, EventType, ShotResult
 
 __all__ = (
@@ -14,7 +7,7 @@ __all__ = (
     "Event",
     "Game",
     "Player",
-    "PlayGround",
+    "Playground",
     "Position",
     "Team",
     "EventType",
