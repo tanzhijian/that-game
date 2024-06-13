@@ -16,21 +16,21 @@ class ShotResult(Enum):
 
 
 class Period(Enum):
-    FIRST_HALF = 1
-    SECOND_HALF = 2
-    FIRST_EXTRA = 3
-    SECOND_EXTRA = 4
-    PENALTY_SHOOTOUT = 5
+    FIRST_HALF = "1st"
+    SECOND_HALF = "2nd"
+    FIRST_EXTRA = "1st_et"
+    SECOND_EXTRA = "2nd_et"
+    PENALTY_SHOOTOUT = "pk"
 
 
 class BodyPart(Enum):
-    RIGHT_FOOT = 1
-    LEFT_FOOT = 2
-    HEAD = 3
-    OTHER = 4
+    RIGHT_FOOT = "rf"
+    LEFT_FOOT = "lf"
+    HEAD = "head"
+    OTHER = "other"
 
 
 class ShotType(Enum):
-    OPEN_PLAY = 1
-    FREEKICK = 2
-    PENALTY = 3
+    OPEN_PLAY = "open_play"
+    FREEKICK = "freekick"
+    PENALTY = "penalty"

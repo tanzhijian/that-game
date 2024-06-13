@@ -1,6 +1,7 @@
 import typing
 from dataclasses import asdict, dataclass
 from datetime import datetime
+from enum import Enum
 
 import arrow
 import pandas as pd
@@ -9,32 +10,32 @@ from ._status import BodyPart, EventType, ShotResult
 
 
 @dataclass
-class _Metadata:
+class Metadata:
     def to_dict(self) -> dict[str, typing.Any]:
         return asdict(self)
 
 
 @dataclass
-class Competition(_Metadata):
+class Competition(Metadata):
     id: str
     name: str
 
 
 @dataclass
-class Player(_Metadata):
+class Player(Metadata):
     id: str
     name: str
     role: str
 
 
 @dataclass
-class Team(_Metadata):
+class Team(Metadata):
     id: str
     name: str
 
 
 @dataclass
-class Playground(_Metadata):
+class Playground(Metadata):
     length: int
     width: int
 
@@ -44,11 +45,11 @@ class Position:
         self,
         x: float,
         y: float,
-        playground: Playground,
+        playground: Playground | dict[str, typing.Any],
     ) -> None:
         self.x = x
         self.y = y
-        self.playground = playground
+        self.playground = get_instance(playground, Playground)
 
     def to_dict(self) -> dict[str, typing.Any]:
         return {
@@ -57,7 +58,11 @@ class Position:
             "playground": self.playground.to_dict(),
         }
 
-    def transform(self, playground: Playground) -> "Position":
+    def transform(
+        self,
+        playground: Playground | dict[str, typing.Any],
+    ) -> "Position":
+        playground = get_instance(playground, Playground)
         x_ratio = playground.length / self.playground.length
         y_ratio = playground.width / self.playground.width
         return Position(
@@ -71,22 +76,22 @@ class Event:
     def __init__(
         self,
         id: str,
-        type: EventType,
+        type: EventType | str,
         timestamp: float,
-        team: Team,
-        player: Player,
-        position: Position,
-        body_part: BodyPart,
-        result: ShotResult,
+        team: Team | dict[str, typing.Any],
+        player: Player | dict[str, typing.Any],
+        position: Position | dict[str, typing.Any],
+        body_part: BodyPart | str,
+        result: ShotResult | str,
     ) -> None:
         self.id = id
-        self.type = type
+        self.type = get_enum(type, EventType)
         self.timestamp = timestamp
-        self.team = team
-        self.player = player
-        self.position = position
-        self.body_part = body_part
-        self.result = result
+        self.team = get_instance(team, Team)
+        self.player = get_instance(player, Player)
+        self.position = get_instance(position, Position)
+        self.body_part = get_enum(body_part, BodyPart)
+        self.result = get_enum(result, ShotResult)
 
     def to_dict(self) -> dict[str, typing.Any]:
         return {
@@ -151,3 +156,19 @@ class Game:
         events_dict = self.to_dict()["events"]
         df = pd.json_normalize(events_dict)
         return df
+
+
+T = typing.TypeVar("T")
+U = typing.TypeVar("U", bound=Enum)
+
+
+def get_instance(obj: T | dict[str, typing.Any], cls: type[T]) -> T:
+    if isinstance(obj, dict):
+        return cls(**obj)
+    return obj
+
+
+def get_enum(obj: U | str, cls: type[U]) -> U:
+    if isinstance(obj, str):
+        return cls(obj)
+    return obj
