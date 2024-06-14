@@ -115,22 +115,22 @@ class Game:
         self,
         id: str,
         datetime: datetime | str,
-        playground: Playground,
-        home_team: Team,
-        away_team: Team,
+        playground: Playground | DataExtraTypes,
+        home_team: Team | DataExtraTypes,
+        away_team: Team | DataExtraTypes,
         home_players: list[Player],
         away_players: list[Player],
-        competition: Competition,
+        competition: Competition | DataExtraTypes,
         events: list[Event],
     ) -> None:
         self.id = id
         self.datetime = arrow.get(datetime)
-        self.playground = playground
-        self.home_team = home_team
-        self.away_team = away_team
+        self.playground = get_instance(playground, Playground)
+        self.home_team = get_instance(home_team, Team)
+        self.away_team = get_instance(away_team, Team)
         self.home_players = home_players
         self.away_players = away_players
-        self.competition = competition
+        self.competition = get_instance(competition, Competition)
         self.events = events
 
     @property
