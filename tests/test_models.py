@@ -11,30 +11,6 @@ from that_game._models import (
 from that_game._status import BodyPart, EventType, ShotResult
 
 
-class TestEvent:
-    @pytest.fixture(scope="class")
-    def event(self) -> Event:
-        return Event(
-            id="0001",
-            type="shot",
-            timestamp=62.0,
-            team=["ars", "Arsenal"],
-            player={"id": "a7", "name": "Bukayo Saka", "role": "FW"},
-            position={
-                "x": 100.1,
-                "y": 43.2,
-                "playground": (108, 68),
-            },
-            body_part="lf",
-            result="saved",
-        )
-
-    def test_attrs(self, event: Event) -> None:
-        assert event.id == "0001"
-        assert event.type == EventType.SHOT
-        assert event.result == ShotResult.SAVED
-
-
 class TestGame:
     @pytest.fixture(scope="class")
     def game(self) -> Game:
@@ -79,8 +55,8 @@ class TestGame:
         shot = shots[0]
         assert int(shot.position.x) == 100
 
-    def test_to_pandas(self, game: Game) -> None:
-        df = game.to_pandas()
+    def test_model_dump_pandas(self, game: Game) -> None:
+        df = game.model_dump_pandas()
         assert df.shape == (1, 14)
         event = df.iloc[0]
         assert event["id"] == "0001"
@@ -93,6 +69,7 @@ class TestPosition:
         return Position(x=0.5, y=0.6, playground=Playground(length=1, width=1))
 
     def test_transform(self, position: Position) -> None:
-        new = position.transform({"width": 100, "length": 100})
+        playground = Playground(length=100, width=100)
+        new = position.transform(playground)
         assert int(new.x) == 50
         assert int(new.y) == 60
