@@ -73,3 +73,7 @@ class TestPosition:
         new = position.transform(playground)
         assert int(new.x) == 50
         assert int(new.y) == 60
+
+    def test_init(self) -> None:
+        position = Position(x=0.5, y=0.6, playground={"length": 1, "width": 1})
+        assert position
