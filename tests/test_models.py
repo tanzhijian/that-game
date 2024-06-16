@@ -8,7 +8,28 @@ from that_game._models import (
     Position,
     Team,
 )
-from that_game._status import BodyPart, EventType, ShotResult
+
+
+class TestEvent:
+    @pytest.fixture(scope="class")
+    def event(self) -> Event:
+        return Event(
+            id="0001",
+            type="shot",
+            timestamp=62.0,
+            team={"id": "ars", "name": "Arsenal"},
+            player={"id": "h9", "name": "Erling Haaland", "role": "FW"},
+            position={
+                "x": 100.1,
+                "y": 43.2,
+                "playground": {"length": 108, "width": 68},
+            },
+            body_part="left_foot",
+            result="saved",
+        )
+
+    def test_attrs(self, event: Event) -> None:
+        assert event.type == "shot"
 
 
 class TestGame:
@@ -24,13 +45,13 @@ class TestGame:
         events = [
             Event(
                 id="0001",
-                type=EventType.SHOT,
+                type="shot",
                 timestamp=62.0,
                 team=home_team,
                 player=home_players[0],
                 position=Position(x=100.1, y=43.2, playground=playground),
-                body_part=BodyPart.LEFT_FOOT,
-                result=ShotResult.SAVED,
+                body_part="left_foot",
+                result="saved",
             )
         ]
         return Game(
@@ -45,13 +66,13 @@ class TestGame:
             events=events,
         )
 
-    def test_game_attrs(self, game: Game) -> None:
+    def test_attrs(self, game: Game) -> None:
         assert game.id == "ars_vs_mci"
         assert game.date == "2024-03-31"
         assert game.time == "11:30"
 
-    def test_game_event(self, game: Game) -> None:
-        shots = [event for event in game.events if event.type == EventType.SHOT]
+    def test_event(self, game: Game) -> None:
+        shots = [event for event in game.events if event.type == "shot"]
         shot = shots[0]
         assert int(shot.position.x) == 100
 

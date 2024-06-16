@@ -1,8 +1,7 @@
-import typing
 from datetime import datetime
 
 import pandas as pd
-from pydantic import BaseModel, computed_field, field_validator
+from pydantic import BaseModel, computed_field
 
 from ._status import BodyPart, EventType, ShotResult
 
@@ -32,15 +31,6 @@ class Position(BaseModel):
     x: float
     y: float
     playground: Playground
-
-    @field_validator("playground", mode="before")
-    @classmethod
-    def get_playground(
-        cls, v: Playground | dict[str, typing.Any]
-    ) -> Playground:
-        if isinstance(v, dict):
-            return Playground(**v)
-        return v
 
     def transform(self, playground: Playground) -> "Position":
         x_ratio = playground.length / self.playground.length
