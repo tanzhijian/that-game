@@ -2,9 +2,9 @@ from ._models import (
     Competition,
     Event,
     Game,
+    Location,
+    Pitch,
     Player,
-    Playground,
-    Position,
     Team,
 )
 
@@ -13,7 +13,7 @@ __all__ = (
     "Event",
     "Game",
     "Player",
-    "Playground",
-    "Position",
+    "Pitch",
+    "Location",
     "Team",
 )

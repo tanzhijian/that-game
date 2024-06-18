@@ -22,23 +22,23 @@ class Team(BaseModel):
     name: str
 
 
-class Playground(BaseModel):
+class Pitch(BaseModel):
     length: int
     width: int
 
 
-class Position(BaseModel):
+class Location(BaseModel):
     x: float
     y: float
-    playground: Playground
+    pitch: Pitch
 
-    def transform(self, playground: Playground) -> "Position":
-        x_ratio = playground.length / self.playground.length
-        y_ratio = playground.width / self.playground.width
-        return Position(
+    def transform(self, pitch: Pitch) -> "Location":
+        x_ratio = pitch.length / self.pitch.length
+        y_ratio = pitch.width / self.pitch.width
+        return Location(
             x=self.x * x_ratio,
             y=self.y * y_ratio,
-            playground=playground,
+            pitch=pitch,
         )
 
 
@@ -48,7 +48,7 @@ class Event(BaseModel):
     timestamp: float
     team: Team
     player: Player
-    position: Position
+    location: Location
     body_part: BodyPart
     result: ShotResult
 
@@ -56,7 +56,7 @@ class Event(BaseModel):
 class Game(BaseModel):
     id: str
     datetime: datetime
-    playground: Playground
+    pitch: Pitch
     home_team: Team
     away_team: Team
     home_players: list[Player]

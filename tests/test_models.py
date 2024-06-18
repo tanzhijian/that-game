@@ -3,9 +3,9 @@ from that_game._models import (
     Competition,
     Event,
     Game,
+    Location,
+    Pitch,
     Player,
-    Playground,
-    Position,
     Team,
 )
 
@@ -19,10 +19,10 @@ class TestEvent:
             timestamp=62.0,
             team={"id": "ars", "name": "Arsenal"},
             player={"id": "h9", "name": "Erling Haaland", "role": "FW"},
-            position={
+            location={
                 "x": 100.1,
                 "y": 43.2,
-                "playground": {"length": 108, "width": 68},
+                "pitch": {"length": 108, "width": 68},
             },
             body_part="left_foot",
             result="saved",
@@ -40,7 +40,7 @@ class TestGame:
         away_team = Team(id="mci", name="Man City")
         home_players = [Player(id="a7", name="Bukayo Saka", role="FW")]
         away_players = [Player(id="h9", name="Erling Haaland", role="FW")]
-        playground = Playground(length=108, width=68)
+        pitch = Pitch(length=108, width=68)
 
         events = [
             Event(
@@ -49,7 +49,7 @@ class TestGame:
                 timestamp=62.0,
                 team=home_team,
                 player=home_players[0],
-                position=Position(x=100.1, y=43.2, playground=playground),
+                location=Location(x=100.1, y=43.2, pitch=pitch),
                 body_part="left_foot",
                 result="saved",
             )
@@ -57,7 +57,7 @@ class TestGame:
         return Game(
             id="ars_vs_mci",
             datetime="2024-03-31 11:30",
-            playground=playground,
+            pitch=pitch,
             competition=competition,
             home_team=home_team,
             away_team=away_team,
@@ -74,7 +74,7 @@ class TestGame:
     def test_event(self, game: Game) -> None:
         shots = [event for event in game.events if event.type == "shot"]
         shot = shots[0]
-        assert int(shot.position.x) == 100
+        assert int(shot.location.x) == 100
 
     def test_model_dump_pandas(self, game: Game) -> None:
         df = game.model_dump_pandas()
@@ -86,15 +86,15 @@ class TestGame:
 
 class TestPosition:
     @pytest.fixture(scope="class")
-    def position(self) -> Position:
-        return Position(x=0.5, y=0.6, playground=Playground(length=1, width=1))
+    def location(self) -> Location:
+        return Location(x=0.5, y=0.6, pitch=Pitch(length=1, width=1))
 
-    def test_transform(self, position: Position) -> None:
-        playground = Playground(length=100, width=100)
-        new = position.transform(playground)
+    def test_transform(self, location: Location) -> None:
+        pitch = Pitch(length=100, width=100)
+        new = location.transform(pitch)
         assert int(new.x) == 50
         assert int(new.y) == 60
 
     def test_init(self) -> None:
-        position = Position(x=0.5, y=0.6, playground={"length": 1, "width": 1})
-        assert position
+        location = Location(x=0.5, y=0.6, pitch={"length": 1, "width": 1})
+        assert location
