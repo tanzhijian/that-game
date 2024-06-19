@@ -18,7 +18,7 @@ class TestEvent:
             type="shot",
             timestamp=62.0,
             team={"id": "ars", "name": "Arsenal"},
-            player={"id": "h9", "name": "Erling Haaland", "role": "FW"},
+            player={"id": "h9", "name": "Erling Haaland", "position": "FW"},
             location={
                 "x": 100.1,
                 "y": 43.2,
@@ -38,8 +38,8 @@ class TestGame:
         competition = Competition(id="pl", name="Premier League")
         home_team = Team(id="ars", name="Arsenal")
         away_team = Team(id="mci", name="Man City")
-        home_players = [Player(id="a7", name="Bukayo Saka", role="FW")]
-        away_players = [Player(id="h9", name="Erling Haaland", role="FW")]
+        home_players = [Player(id="a7", name="Bukayo Saka", position="FW")]
+        away_players = [Player(id="h9", name="Erling Haaland", position="FW")]
         pitch = Pitch(length=108, width=68)
 
         events = [

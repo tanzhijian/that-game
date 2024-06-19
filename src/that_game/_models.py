@@ -14,7 +14,7 @@ class Competition(BaseModel):
 class Player(BaseModel):
     id: str
     name: str
-    role: str
+    position: str
 
 
 class Team(BaseModel):
