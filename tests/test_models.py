@@ -57,7 +57,6 @@ class TestGame:
         return Game(
             id="ars_vs_mci",
             datetime="2024-03-31 11:30",
-            pitch=pitch,
             competition=competition,
             home_team=home_team,
             away_team=away_team,

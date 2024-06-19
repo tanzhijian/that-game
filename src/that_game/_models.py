@@ -56,12 +56,11 @@ class Event(BaseModel):
 class Game(BaseModel):
     id: str
     datetime: datetime
-    pitch: Pitch
     home_team: Team
     away_team: Team
     home_players: list[Player]
     away_players: list[Player]
-    competition: Competition
+    competition: Competition | None = None
     events: list[Event]
 
     @computed_field  # type: ignore
