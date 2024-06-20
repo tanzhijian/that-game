@@ -60,7 +60,7 @@ class Game(BaseModel):
     away_team: Team
     home_players: list[Player]
     away_players: list[Player]
-    competition: Competition | None = None
+    competition: Competition
     events: list[Event]
 
     @computed_field  # type: ignore
@@ -70,7 +70,7 @@ class Game(BaseModel):
 
     @computed_field  # type: ignore
     @property
-    def time(self) -> str:
+    def kick_off(self) -> str:
         return self.datetime.strftime("%H:%M")
 
     def model_dump_pandas(self) -> pd.DataFrame:

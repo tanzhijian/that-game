@@ -1,3 +1,4 @@
+from ._loaders.statsbomb import load_statsbomb
 from ._models import (
     Competition,
     Event,
@@ -16,4 +17,5 @@ __all__ = (
     "Pitch",
     "Location",
     "Team",
+    "load_statsbomb",
 )

@@ -68,7 +68,7 @@ class TestGame:
     def test_attrs(self, game: Game) -> None:
         assert game.id == "ars_vs_mci"
         assert game.date == "2024-03-31"
-        assert game.time == "11:30"
+        assert game.kick_off == "11:30"
 
     def test_event(self, game: Game) -> None:
         shots = [event for event in game.events if event.type == "shot"]
