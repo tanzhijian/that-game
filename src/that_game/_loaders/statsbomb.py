@@ -11,7 +11,7 @@ from .._models import (
     Player,
     Team,
 )
-from .._status import EventType
+from .._status import BodyPart, EventType
 
 
 def load_statsbomb(
@@ -154,15 +154,31 @@ class StatsBombLoader:
             except KeyError:
                 continue
 
+            type_ = EVENT_TYPES[type_]
+            # 目前只有 shot 和 pass
+            try:
+                if type_ == "shot":
+                    body_part = (
+                        BODY_PARTS.get(event["shot"]["body_part"]["name"])
+                        or "other"
+                    )
+                else:
+                    body_part = (
+                        BODY_PARTS.get(event["pass"]["body_part"]["name"])
+                        or "other"
+                    )
+            except KeyError:
+                body_part = "other"
+
             events.append(
                 Event(
                     id=event["id"],
-                    type=EVENT_TYPES[type_],
+                    type=type_,
                     seconds=self._transform_timestamp(event["timestamp"]),
                     team=self._teams[str(event["team"]["id"])],
                     player=player,
                     location=location,
-                    body_part="left_foot",
+                    body_part=body_part,
                     result="saved",
                 )
             )
@@ -186,4 +202,10 @@ class StatsBombLoader:
 EVENT_TYPES: dict[str, EventType] = {
     "Pass": "pass",
     "Shot": "shot",
+}
+BODY_PARTS: dict[str, BodyPart] = {
+    "Right Foot": "right_foot",
+    "Left Foot": "left_foot",
+    "Head": "head",
+    "Other": "other",
 }

@@ -35,6 +35,8 @@ class TestLoadStatsbomb:
         event = next(event for event in game.events if event.type == "shot")
         assert event.location.x > 0
 
-    def test_events_type(self, game: Game) -> None:
-        for event in game.events:
-            assert event.type in {"pass", "shot"}
+    def test_events_status(self, game: Game) -> None:
+        pass_ = next(event for event in game.events if event.type == "pass")
+        shot = next(event for event in game.events if event.type == "shot")
+        assert pass_.body_part == "right_foot"
+        assert shot.body_part == "left_foot"
