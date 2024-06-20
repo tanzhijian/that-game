@@ -2,7 +2,7 @@ import json
 import typing
 from datetime import datetime
 
-from that_game import (
+from .._models import (
     Competition,
     Event,
     Game,
@@ -11,6 +11,7 @@ from that_game import (
     Player,
     Team,
 )
+from .._status import EventType
 
 
 def load_statsbomb(
@@ -138,6 +139,10 @@ class StatsBombLoader:
     def events(self) -> list[Event]:
         events: list[Event] = []
         for event in self._raw_events:
+            # 目前只处理两种事件，射门和传球
+            if (type_ := event["type"]["name"]) not in EVENT_TYPES:
+                continue
+
             # 先快速处理 KeyError，稍后再来分析具体数据
             try:
                 player = self._find_player(str(event["player"]["id"]))
@@ -152,8 +157,8 @@ class StatsBombLoader:
             events.append(
                 Event(
                     id=event["id"],
-                    type="shot",
-                    timestamp=self._transform_timestamp(event["timestamp"]),
+                    type=EVENT_TYPES[type_],
+                    seconds=self._transform_timestamp(event["timestamp"]),
                     team=self._teams[str(event["team"]["id"])],
                     player=player,
                     location=location,
@@ -175,3 +180,10 @@ class StatsBombLoader:
             competition=self.competition,
             events=self.events,
         )
+
+
+# 目前只处理两种事件，射门和传球
+EVENT_TYPES: dict[str, EventType] = {
+    "Pass": "pass",
+    "Shot": "shot",
+}

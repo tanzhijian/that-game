@@ -45,7 +45,7 @@ class Location(BaseModel):
 class Event(BaseModel):
     id: str
     type: EventType
-    timestamp: float
+    seconds: float
     team: Team
     player: Player
     location: Location

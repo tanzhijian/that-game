@@ -16,7 +16,7 @@ class TestEvent:
         return Event(
             id="0001",
             type="shot",
-            timestamp=62.0,
+            seconds=62.0,
             team={"id": "ars", "name": "Arsenal"},
             player={"id": "h9", "name": "Erling Haaland", "position": "FW"},
             location={
@@ -46,7 +46,7 @@ class TestGame:
             Event(
                 id="0001",
                 type="shot",
-                timestamp=62.0,
+                seconds=62.0,
                 team=home_team,
                 player=home_players[0],
                 location=Location(x=100.1, y=43.2, pitch=pitch),
