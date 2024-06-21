@@ -40,3 +40,5 @@ class TestLoadStatsbomb:
         shot = next(event for event in game.events if event.type == "shot")
         assert pass_.body_part == "right_foot"
         assert shot.body_part == "left_foot"
+        assert pass_.result == "other"
+        assert shot.result == "blocked"

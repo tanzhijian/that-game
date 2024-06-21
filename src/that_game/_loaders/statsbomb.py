@@ -11,7 +11,7 @@ from .._models import (
     Player,
     Team,
 )
-from .._status import BodyPart, EventType
+from .._status import BodyPart, EventType, Result
 
 
 def load_statsbomb(
@@ -170,6 +170,19 @@ class StatsBombLoader:
             except KeyError:
                 body_part = "other"
 
+            try:
+                if type_ == "shot":
+                    result = (
+                        RESULTS.get(event["shot"]["outcome"]["name"]) or "other"
+                    )
+                else:
+                    result = (
+                        RESULTS.get(event["pass"]["outcome"]["name"]) or "other"
+                    )
+
+            except KeyError:
+                result = "other"
+
             events.append(
                 Event(
                     id=event["id"],
@@ -179,7 +192,7 @@ class StatsBombLoader:
                     player=player,
                     location=location,
                     body_part=body_part,
-                    result="saved",
+                    result=result,
                 )
             )
         return events
@@ -209,3 +222,21 @@ BODY_PARTS: dict[str, BodyPart] = {
     "Head": "head",
     "Other": "other",
 }
+# 这里考虑需要使用 statsbomb 的 results 扩展词汇
+SHOT_RESULTS: dict[str, Result] = {
+    "Goal": "goal",
+    "Saved": "saved",
+    "Off T": "missed",
+    "Wayward": "missed",
+    "Post": "post",
+    "Blocked": "blocked",
+    "Saved Off T": "saved",
+    "Saved To Post": "saved",
+}
+PASS_RESULTS: dict[str, Result] = {
+    "Incomplete": "pass",
+    "Out": "pass",
+    "Unknown": "pass",
+    "Pass Offside": "pass",
+}
+RESULTS = SHOT_RESULTS | PASS_RESULTS

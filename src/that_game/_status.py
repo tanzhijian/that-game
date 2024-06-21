@@ -17,7 +17,7 @@ ShotResult = Literal[
     "blocked",
     "own_goal",
 ]
-PassResult = Literal["out"]
-Result = ShotResult | PassResult
+PassResult = Literal["pass"]
+Result = ShotResult | PassResult | Literal["other"]
 
 EventType = Literal["shot", "pass"]
