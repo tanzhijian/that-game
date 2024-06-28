@@ -22,13 +22,7 @@ class TestEvent:
             location={
                 "x": 100.1,
                 "y": 43.2,
-                "pitch": {
-                    "length": 108,
-                    "width": 68,
-                    "origin": "bottom-left",
-                    "home": "left",
-                    "away": "left",
-                },
+                "pitch": {"length": 108, "width": 68},
             },
             body_part="left_foot",
             result="saved",
@@ -46,9 +40,7 @@ class TestGame:
         away_team = Team(id="mci", name="Man City")
         home_players = [Player(id="a7", name="Bukayo Saka", position="FW")]
         away_players = [Player(id="h9", name="Erling Haaland", position="FW")]
-        pitch = Pitch(
-            length=108, width=68, origin="bottom-left", home="left", away="left"
-        )
+        pitch = Pitch(length=108, width=68)
 
         events = [
             Event(
@@ -85,7 +77,7 @@ class TestGame:
 
     def test_model_dump_pandas(self, game: Game) -> None:
         df = game.model_dump_pandas()
-        assert df.shape == (1, 19)
+        assert df.shape == (1, 16)
         event = df.iloc[0]
         assert event["id"] == "0001"
         assert event["team.name"] == "Arsenal"
@@ -95,25 +87,19 @@ class TestPosition:
     @pytest.fixture
     def location(self) -> Location:
         return Location(
-            x=0.5,
+            x=0.4,
             y=0.6,
-            pitch=Pitch(
-                length=1,
-                width=1,
-                origin="bottom-left",
-                home="left",
-                away="left",
-            ),
+            pitch=Pitch(length=1, width=1),
         )
+
+    def test_init(self, location: Location) -> None:
+        assert int(location.x) == 43
+        assert location.pitch.length == 108
 
     def test_transform(self, location: Location) -> None:
         pitch = Pitch(
-            length=100,
-            width=100,
-            origin="bottom-left",
-            home="left",
-            away="left",
+            length=100, width=100, x_direction="left", y_direction="down"
         )
         location.transform(pitch)
-        assert int(location.x) == 50
-        assert int(location.y) == 60
+        assert int(location.x) == 60
+        assert int(location.y) == 40

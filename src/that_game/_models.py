@@ -2,7 +2,8 @@ from datetime import datetime
 from typing import Literal
 
 import pandas as pd
-from pydantic import BaseModel, computed_field
+from pydantic import BaseModel, computed_field, model_validator
+from typing_extensions import Self
 
 from ._status import BodyPart, EventType, Result
 
@@ -26,21 +27,8 @@ class Team(BaseModel):
 class Pitch(BaseModel):
     length: int
     width: int
-    origin: Literal["top-left", "top-right", "bottom-left", "bottom-right"]
-    home: Literal["left", "right"]
-    away: Literal["left", "right"]
-
-    @computed_field  # type: ignore
-    @property
-    def x_direction(self) -> Literal["left", "right"]:
-        """X轴方向根据原点位置确定，原点在左侧时，X轴方向是向右（right），在右侧时，X轴方向是向左（left）"""
-        return "right" if "left" in self.origin else "left"
-
-    @computed_field  # type: ignore
-    @property
-    def y_direction(self) -> Literal["up", "down"]:
-        """Y轴方向根据原点位置确定，原点在上方时，Y轴方向是向下（down），在下方时，Y轴方向是向上（up）"""
-        return "down" if "top" in self.origin else "up"
+    x_direction: Literal["left", "right"] = "right"
+    y_direction: Literal["up", "down"] = "up"
 
 
 class Location(BaseModel):
@@ -48,19 +36,26 @@ class Location(BaseModel):
     y: float
     pitch: Pitch
 
-    _standard_pitch = Pitch(
-        length=108,
-        width=68,
-        origin="top-left",
-        home="left",
-        away="left",
-    )
+    _standard_pitch = Pitch(length=108, width=68)
+
+    @model_validator(mode="after")
+    def _init_transform(self) -> Self:
+        self.transform(self._standard_pitch)
+        return self
 
     def transform(self, pitch: Pitch) -> None:
-        x_ratio = pitch.length / self.pitch.length
-        y_ratio = pitch.width / self.pitch.width
-        self.x = self.x * x_ratio
-        self.y = self.y * y_ratio
+        if pitch == self.pitch:
+            return
+
+        x_scale = pitch.length / self.pitch.length
+        y_scale = pitch.width / self.pitch.width
+        self.x = self.x * x_scale
+        self.y = self.y * y_scale
+
+        if pitch.x_direction == "left":
+            self.x = pitch.length - self.x
+        if pitch.y_direction == "down":
+            self.y = pitch.width - self.y
         self.pitch = pitch
 
 

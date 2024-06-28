@@ -66,13 +66,7 @@ class StatsBombLoader:
             id=str(self._raw_game["competition"]["competition_id"]),
             name=self._raw_game["competition"]["competition_name"],
         )
-        self._pitch = Pitch(
-            length=120,
-            width=80,
-            origin="top-left",
-            home="left",
-            away="left",
-        )
+        self._pitch = Pitch(length=120, width=80, y_direction="down")
 
     def _parse_players(self) -> tuple[dict[str, Player], dict[str, Player]]:
         p1, p2 = self._raw_lineups[0], self._raw_lineups[1]
