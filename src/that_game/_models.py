@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Literal
 
 import pandas as pd
 from pydantic import BaseModel, computed_field
@@ -25,6 +26,21 @@ class Team(BaseModel):
 class Pitch(BaseModel):
     length: int
     width: int
+    origin: Literal["top-left", "top-right", "bottom-left", "bottom-right"]
+    home: Literal["left", "right"]
+    away: Literal["left", "right"]
+
+    @computed_field  # type: ignore
+    @property
+    def x_direction(self) -> Literal["left", "right"]:
+        """X轴方向根据原点位置确定，原点在左侧时，X轴方向是向右（right），在右侧时，X轴方向是向左（left）"""
+        return "right" if "left" in self.origin else "left"
+
+    @computed_field  # type: ignore
+    @property
+    def y_direction(self) -> Literal["up", "down"]:
+        """Y轴方向根据原点位置确定，原点在上方时，Y轴方向是向下（down），在下方时，Y轴方向是向上（up）"""
+        return "down" if "top" in self.origin else "up"
 
 
 class Location(BaseModel):
@@ -32,14 +48,20 @@ class Location(BaseModel):
     y: float
     pitch: Pitch
 
-    def transform(self, pitch: Pitch) -> "Location":
+    _standard_pitch = Pitch(
+        length=108,
+        width=68,
+        origin="top-left",
+        home="left",
+        away="left",
+    )
+
+    def transform(self, pitch: Pitch) -> None:
         x_ratio = pitch.length / self.pitch.length
         y_ratio = pitch.width / self.pitch.width
-        return Location(
-            x=self.x * x_ratio,
-            y=self.y * y_ratio,
-            pitch=pitch,
-        )
+        self.x = self.x * x_ratio
+        self.y = self.y * y_ratio
+        self.pitch = pitch
 
 
 class Event(BaseModel):

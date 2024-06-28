@@ -22,7 +22,13 @@ class TestEvent:
             location={
                 "x": 100.1,
                 "y": 43.2,
-                "pitch": {"length": 108, "width": 68},
+                "pitch": {
+                    "length": 108,
+                    "width": 68,
+                    "origin": "bottom-left",
+                    "home": "left",
+                    "away": "left",
+                },
             },
             body_part="left_foot",
             result="saved",
@@ -40,7 +46,9 @@ class TestGame:
         away_team = Team(id="mci", name="Man City")
         home_players = [Player(id="a7", name="Bukayo Saka", position="FW")]
         away_players = [Player(id="h9", name="Erling Haaland", position="FW")]
-        pitch = Pitch(length=108, width=68)
+        pitch = Pitch(
+            length=108, width=68, origin="bottom-left", home="left", away="left"
+        )
 
         events = [
             Event(
@@ -77,23 +85,35 @@ class TestGame:
 
     def test_model_dump_pandas(self, game: Game) -> None:
         df = game.model_dump_pandas()
-        assert df.shape == (1, 14)
+        assert df.shape == (1, 19)
         event = df.iloc[0]
         assert event["id"] == "0001"
         assert event["team.name"] == "Arsenal"
 
 
 class TestPosition:
-    @pytest.fixture(scope="class")
+    @pytest.fixture
     def location(self) -> Location:
-        return Location(x=0.5, y=0.6, pitch=Pitch(length=1, width=1))
+        return Location(
+            x=0.5,
+            y=0.6,
+            pitch=Pitch(
+                length=1,
+                width=1,
+                origin="bottom-left",
+                home="left",
+                away="left",
+            ),
+        )
 
     def test_transform(self, location: Location) -> None:
-        pitch = Pitch(length=100, width=100)
-        new = location.transform(pitch)
-        assert int(new.x) == 50
-        assert int(new.y) == 60
-
-    def test_init(self) -> None:
-        location = Location(x=0.5, y=0.6, pitch={"length": 1, "width": 1})
-        assert location
+        pitch = Pitch(
+            length=100,
+            width=100,
+            origin="bottom-left",
+            home="left",
+            away="left",
+        )
+        location.transform(pitch)
+        assert int(location.x) == 50
+        assert int(location.y) == 60
