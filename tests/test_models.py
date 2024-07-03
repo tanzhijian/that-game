@@ -1,19 +1,19 @@
 import pytest
 from that_game._models import (
     Competition,
-    Event,
     Game,
     Location,
     Pitch,
     Player,
+    Shot,
     Team,
 )
 
 
 class TestEvent:
     @pytest.fixture(scope="class")
-    def event(self) -> Event:
-        return Event(
+    def event(self) -> Shot:
+        return Shot(
             id="0001",
             type="shot",
             seconds=62.0,
@@ -24,11 +24,17 @@ class TestEvent:
                 "y": 43.2,
                 "pitch": {"length": 108, "width": 68},
             },
+            end_location={
+                "x": 108.0,
+                "y": 43.2,
+                "pitch": {"length": 108, "width": 68},
+            },
+            pattern="open_play",
             body_part="left_foot",
             result="saved",
         )
 
-    def test_attrs(self, event: Event) -> None:
+    def test_attrs(self, event: Shot) -> None:
         assert event.type == "shot"
 
 
@@ -43,13 +49,15 @@ class TestGame:
         pitch = Pitch(length=108, width=68)
 
         events = [
-            Event(
+            Shot(
                 id="0001",
                 type="shot",
                 seconds=62.0,
                 team=home_team,
                 player=home_players[0],
                 location=Location(x=100.1, y=43.2, pitch=pitch),
+                end_location=Location(x=108.0, y=43.2, pitch=pitch),
+                pattern="open_play",
                 body_part="left_foot",
                 result="saved",
             )
@@ -71,13 +79,12 @@ class TestGame:
         assert game.kick_off == "11:30"
 
     def test_event(self, game: Game) -> None:
-        shots = [event for event in game.events if event.type == "shot"]
-        shot = shots[0]
+        shot = game.shots()[0]
         assert int(shot.location.x) == 100
 
     def test_model_dump_pandas(self, game: Game) -> None:
         df = game.model_dump_pandas()
-        assert df.shape == (1, 16)
+        assert df.shape == (1, 23)
         event = df.iloc[0]
         assert event["id"] == "0001"
         assert event["team.name"] == "Arsenal"

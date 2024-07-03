@@ -9,6 +9,8 @@ Period = Literal[
 ]
 BodyPart = Literal["right_foot", "left_foot", "head", "other"]
 
+ShotPattern = Literal["freekick", "penalty", "open_play"]
+
 ShotResult = Literal[
     "goal",
     "saved",
@@ -17,7 +19,6 @@ ShotResult = Literal[
     "blocked",
     "own_goal",
 ]
-PassResult = Literal["pass"]
-Result = ShotResult | PassResult | Literal["other"]
+PassResult = Literal["success", "fail"]
 
 EventType = Literal["shot", "pass"]

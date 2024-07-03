@@ -32,13 +32,11 @@ class TestLoadStatsbomb:
 
         assert game.away_players[0].name == "Granit Xhaka"
 
-        event = next(event for event in game.events if event.type == "shot")
-        assert event.location.x > 0
+        assert len(game.events) > 0
 
     def test_events_status(self, game: Game) -> None:
-        pass_ = next(event for event in game.events if event.type == "pass")
-        shot = next(event for event in game.events if event.type == "shot")
-        assert pass_.body_part == "right_foot"
+        pass_ = game.passes()[0]
+        shot = game.shots()[0]
         assert shot.body_part == "left_foot"
-        assert pass_.result == "other"
+        assert pass_.result == "success"
         assert shot.result == "blocked"

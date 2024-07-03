@@ -4,8 +4,10 @@ from ._models import (
     Event,
     Game,
     Location,
+    Pass,
     Pitch,
     Player,
+    Shot,
     Team,
 )
 
@@ -13,9 +15,11 @@ __all__ = (
     "Competition",
     "Event",
     "Game",
-    "Player",
-    "Pitch",
     "Location",
+    "Pass",
+    "Pitch",
+    "Player",
+    "Shot",
     "Team",
     "load_statsbomb",
 )

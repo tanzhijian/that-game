@@ -5,7 +5,7 @@ import pandas as pd
 from pydantic import BaseModel, computed_field, model_validator
 from typing_extensions import Self
 
-from ._status import BodyPart, EventType, Result
+from ._status import BodyPart, EventType, PassResult, ShotPattern, ShotResult
 
 
 class Competition(BaseModel):
@@ -63,11 +63,24 @@ class Event(BaseModel):
     id: str
     type: EventType
     seconds: float
+
+
+class Shot(Event):
     team: Team
     player: Player
     location: Location
+    end_location: Location
+    pattern: ShotPattern
     body_part: BodyPart
-    result: Result
+    result: ShotResult
+
+
+class Pass(Event):
+    team: Team
+    player: Player
+    location: Location
+    end_location: Location
+    result: PassResult
 
 
 class Game(BaseModel):
@@ -78,7 +91,7 @@ class Game(BaseModel):
     home_players: list[Player]
     away_players: list[Player]
     competition: Competition
-    events: list[Event]
+    events: list[Shot | Pass]
 
     @computed_field  # type: ignore
     @property
@@ -94,3 +107,9 @@ class Game(BaseModel):
         events_dict = self.model_dump()["events"]
         df = pd.json_normalize(events_dict)
         return df
+
+    def shots(self) -> list[Shot]:
+        return [event for event in self.events if isinstance(event, Shot)]
+
+    def passes(self) -> list[Pass]:
+        return [event for event in self.events if isinstance(event, Pass)]

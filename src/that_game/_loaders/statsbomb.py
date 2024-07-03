@@ -7,11 +7,13 @@ from .._models import (
     Event,
     Game,
     Location,
+    Pass,
     Pitch,
     Player,
+    Shot,
     Team,
 )
-from .._status import BodyPart, EventType, Result
+from .._status import BodyPart, EventType, ShotPattern, ShotResult
 
 
 def load_statsbomb(
@@ -140,61 +142,61 @@ class StatsBombLoader:
         events: list[Event] = []
         for event in self._raw_events:
             # 目前只处理两种事件，射门和传球
-            if (type_ := event["type"]["name"]) not in EVENT_TYPES:
+            if (type_ := EVENT_TYPES.get(event["type"]["name"])) is None:
                 continue
 
-            # 先快速处理 KeyError，稍后再来分析具体数据
-            try:
-                player = self._find_player(str(event["player"]["id"]))
-                location = Location(
-                    x=event["location"][0],
-                    y=event["location"][1],
-                    pitch=self.pitch,
-                )
-            except KeyError:
-                continue
-
-            type_ = EVENT_TYPES[type_]
-            # 目前只有 shot 和 pass
-            try:
-                if type_ == "shot":
-                    body_part = (
-                        BODY_PARTS.get(event["shot"]["body_part"]["name"])
-                        or "other"
-                    )
-                else:
-                    body_part = (
-                        BODY_PARTS.get(event["pass"]["body_part"]["name"])
-                        or "other"
-                    )
-            except KeyError:
-                body_part = "other"
-
-            try:
-                if type_ == "shot":
-                    result = (
-                        RESULTS.get(event["shot"]["outcome"]["name"]) or "other"
-                    )
-                else:
-                    result = (
-                        RESULTS.get(event["pass"]["outcome"]["name"]) or "other"
-                    )
-
-            except KeyError:
-                result = "other"
-
-            events.append(
-                Event(
-                    id=event["id"],
-                    type=type_,
-                    seconds=self._transform_timestamp(event["timestamp"]),
-                    team=self._teams[str(event["team"]["id"])],
-                    player=player,
-                    location=location,
-                    body_part=body_part,
-                    result=result,
-                )
+            id_ = event["id"]
+            seconds = self._transform_timestamp(event["timestamp"])
+            team = self._teams[str(event["team"]["id"])]
+            player = self._find_player(str(event["player"]["id"]))
+            location = Location(
+                x=event["location"][0],
+                y=event["location"][1],
+                pitch=self.pitch,
             )
+
+            match type_:
+                case "shot":
+                    event = Shot(
+                        id=id_,
+                        type=type_,
+                        seconds=seconds,
+                        team=team,
+                        player=player,
+                        location=location,
+                        end_location=Location(
+                            x=event["shot"]["end_location"][0],
+                            y=event["shot"]["end_location"][1],
+                            pitch=self.pitch,
+                        ),
+                        pattern=SHOT_PATTERNS[event["shot"]["type"]["name"]],
+                        body_part=BODY_PARTS[
+                            event["shot"]["body_part"]["name"]
+                        ],
+                        result=SHOT_RESULTS[event["shot"]["outcome"]["name"]],
+                    )
+                case "pass":
+                    event = Pass(
+                        id=id_,
+                        type=type_,
+                        seconds=seconds,
+                        team=team,
+                        player=player,
+                        location=location,
+                        end_location=Location(
+                            x=event["pass"]["end_location"][0],
+                            y=event["pass"]["end_location"][1],
+                            pitch=self.pitch,
+                        ),
+                        result="fail"
+                        if event["pass"].get("outcome")
+                        else "success",
+                    )
+                case _:
+                    raise ValueError(f"Check event, index: {event['index']}")
+
+            events.append(event)
+
         return events
 
     @property
@@ -222,8 +224,16 @@ BODY_PARTS: dict[str, BodyPart] = {
     "Head": "head",
     "Other": "other",
 }
+
+SHOT_PATTERNS: dict[str, ShotPattern] = {
+    "Corner": "freekick",
+    "Free Kick": "freekick",
+    "Open Play": "open_play",
+    "Penalty": "penalty",
+    "Kick Off": "open_play",
+}
 # 这里考虑需要使用 statsbomb 的 results 扩展词汇
-SHOT_RESULTS: dict[str, Result] = {
+SHOT_RESULTS: dict[str, ShotResult] = {
     "Goal": "goal",
     "Saved": "saved",
     "Off T": "missed",
@@ -233,10 +243,3 @@ SHOT_RESULTS: dict[str, Result] = {
     "Saved Off T": "saved",
     "Saved To Post": "saved",
 }
-PASS_RESULTS: dict[str, Result] = {
-    "Incomplete": "pass",
-    "Out": "pass",
-    "Unknown": "pass",
-    "Pass Offside": "pass",
-}
-RESULTS = SHOT_RESULTS | PASS_RESULTS
