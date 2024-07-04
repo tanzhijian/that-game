@@ -40,3 +40,4 @@ class TestLoadStatsbomb:
         assert shot.body_part == "left_foot"
         assert pass_.result == "success"
         assert shot.result == "blocked"
+        assert shot.location.z is None

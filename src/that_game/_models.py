@@ -1,9 +1,8 @@
 from datetime import datetime
-from typing import Any, Literal, Sequence
+from typing import Literal, Sequence
 
 import pandas as pd
 from pydantic import BaseModel, Field, computed_field, model_validator
-from pydantic.main import IncEx
 from typing_extensions import Self
 
 from ._status import (
@@ -88,35 +87,6 @@ class Location(BaseModel):
             self.y = pitch.width - self.y
         self.pitch = pitch
 
-    def model_dump(
-        self,
-        *,
-        mode: Literal["json", "python"] | str = "python",
-        include: IncEx = None,
-        exclude: IncEx = None,
-        context: dict[str, Any] | None = None,
-        by_alias: bool = False,
-        exclude_unset: bool = False,
-        exclude_defaults: bool = False,
-        exclude_none: bool = True,
-        round_trip: bool = False,
-        warnings: bool | Literal["none", "warn", "error"] = True,
-        serialize_as_any: bool = False,
-    ) -> dict[str, Any]:
-        return super().model_dump(
-            mode=mode,
-            include=include,
-            exclude=exclude,
-            context=context,
-            by_alias=by_alias,
-            exclude_unset=exclude_unset,
-            exclude_defaults=exclude_defaults,
-            exclude_none=exclude_none,
-            round_trip=round_trip,
-            warnings=warnings,
-            serialize_as_any=serialize_as_any,
-        )
-
 
 class Event(BaseModel):
     id: str
@@ -164,7 +134,7 @@ class Game(BaseModel):
         return self.datetime.strftime("%H:%M")
 
     def model_dump_pandas(self) -> pd.DataFrame:
-        events_dict = self.model_dump()["events"]
+        events_dict = self.model_dump(exclude_none=True)["events"]
         df = pd.json_normalize(events_dict)
         return df
 

@@ -157,6 +157,11 @@ class StatsBombLoader:
 
             match type_:
                 case "shot":
+                    try:
+                        z = event["shot"]["end_location"][2]
+                    except IndexError:
+                        z = None
+
                     event = Shot(
                         id=id_,
                         type=type_,
@@ -168,6 +173,7 @@ class StatsBombLoader:
                         end_location=Location(
                             x=event["shot"]["end_location"][0],
                             y=event["shot"]["end_location"][1],
+                            z=z,
                             pitch=self.pitch,
                         ),
                         pattern=SHOT_PATTERNS[event["shot"]["type"]["name"]],
