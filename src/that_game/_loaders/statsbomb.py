@@ -4,7 +4,6 @@ from datetime import datetime
 
 from .._models import (
     Competition,
-    Event,
     Game,
     Location,
     Pass,
@@ -68,7 +67,7 @@ class StatsBombLoader:
             id=str(self._raw_game["competition"]["competition_id"]),
             name=self._raw_game["competition"]["competition_name"],
         )
-        self._pitch = Pitch(length=120, width=80, y_direction="down")
+        self._pitch = Pitch(length=120, width=80, width_direction="down")
 
     def _parse_players(self) -> tuple[dict[str, Player], dict[str, Player]]:
         p1, p2 = self._raw_lineups[0], self._raw_lineups[1]
@@ -138,8 +137,8 @@ class StatsBombLoader:
         return seconds
 
     @property
-    def events(self) -> list[Event]:
-        events: list[Event] = []
+    def events(self) -> list[Shot | Pass]:
+        events: list[Shot | Pass] = []
         for event in self._raw_events:
             # 目前只处理两种事件，射门和传球
             if (type_ := EVENT_TYPES.get(event["type"]["name"])) is None:

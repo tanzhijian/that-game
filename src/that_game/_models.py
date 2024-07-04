@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Literal, Sequence
 
 import pandas as pd
-from pydantic import BaseModel, computed_field, model_validator
+from pydantic import BaseModel, Field, computed_field, model_validator
 from typing_extensions import Self
 
 from ._status import (
@@ -13,6 +13,7 @@ from ._status import (
     ShotPattern,
     ShotResult,
 )
+from ._utils import is_float_close
 
 
 class Competition(BaseModel):
@@ -36,11 +37,28 @@ class Pitch(BaseModel):
     width: float
     length_direction: Literal["left", "right"] = "right"
     width_direction: Literal["up", "down"] = "up"
+    height_scale_to_meter: float = Field(default=1.0, gt=0)
+
+    def __eq__(self, other: object) -> bool:
+        """重写等于方法，以支持浮点数的容差比较。"""
+        if not isinstance(other, Pitch):
+            return NotImplemented
+
+        for field in self.model_fields:
+            value1, value2 = getattr(self, field), getattr(other, field)
+            # 对浮点数使用容差比较
+            if isinstance(value1, float) and isinstance(value2, float):
+                return is_float_close(value1, value2)
+            # 对非浮点数直接比较
+            elif value1 != value2:
+                return False
+        return True
 
 
 class Location(BaseModel):
     x: float
     y: float
+    z: float | None = None
     pitch: Pitch
 
     _standard_pitch = Pitch(length=108, width=68)
@@ -58,6 +76,10 @@ class Location(BaseModel):
         y_scale = pitch.width / self.pitch.width
         self.x = self.x * x_scale
         self.y = self.y * y_scale
+        if self.z is not None and not is_float_close(
+            pitch.height_scale_to_meter, self.pitch.height_scale_to_meter
+        ):
+            self.z = self.z * pitch.height_scale_to_meter
 
         if pitch.length_direction == "left":
             self.x = pitch.length - self.x

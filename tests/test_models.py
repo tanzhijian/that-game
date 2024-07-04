@@ -8,6 +8,7 @@ from that_game._models import (
     Shot,
     Team,
 )
+from that_game._utils import is_float_close
 
 
 class TestEvent:
@@ -87,19 +88,34 @@ class TestGame:
 
     def test_model_dump_pandas(self, game: Game) -> None:
         df = game.model_dump_pandas()
-        assert df.shape == (1, 24)
+        assert df.shape == (1, 28)
         event = df.iloc[0]
         assert event["id"] == "0001"
         assert event["team.name"] == "Arsenal"
 
 
-class TestPosition:
+def test_pitch_eq() -> None:
+    pitch1 = Pitch(length=1, width=0.5 + 0.5, height_scale_to_meter=0.1 + 0.2)
+    pitch2 = Pitch(length=1, width=1, height_scale_to_meter=0.3)
+    assert pitch1 == pitch2
+
+
+class TestLocation:
     @pytest.fixture
     def location(self) -> Location:
         return Location(
             x=0.4,
             y=0.6,
             pitch=Pitch(length=1, width=1),
+        )
+
+    @pytest.fixture
+    def location_include_z(self) -> Location:
+        return Location(
+            x=120,
+            y=43.4,
+            z=2.3,
+            pitch=Pitch(length=120, width=80, width_direction="down"),
         )
 
     def test_init(self, location: Location) -> None:
@@ -116,3 +132,7 @@ class TestPosition:
         location.transform(pitch)
         assert int(location.x) == 60
         assert int(location.y) == 40
+
+    def test_z(self, location_include_z: Location) -> None:
+        if location_include_z.z is not None:
+            assert is_float_close(location_include_z.z, 2.3)
