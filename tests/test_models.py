@@ -16,6 +16,7 @@ class TestEvent:
         return Shot(
             id="0001",
             type="shot",
+            period="first_half",
             seconds=62.0,
             team={"id": "ars", "name": "Arsenal"},
             player={"id": "h9", "name": "Erling Haaland", "position": "FW"},
@@ -52,6 +53,7 @@ class TestGame:
             Shot(
                 id="0001",
                 type="shot",
+                period="first_half",
                 seconds=62.0,
                 team=home_team,
                 player=home_players[0],
@@ -81,10 +83,11 @@ class TestGame:
     def test_event(self, game: Game) -> None:
         shot = game.shots()[0]
         assert int(shot.location.x) == 100
+        assert shot.period == "first_half"
 
     def test_model_dump_pandas(self, game: Game) -> None:
         df = game.model_dump_pandas()
-        assert df.shape == (1, 23)
+        assert df.shape == (1, 24)
         event = df.iloc[0]
         assert event["id"] == "0001"
         assert event["team.name"] == "Arsenal"

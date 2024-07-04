@@ -1,11 +1,18 @@
 from datetime import datetime
-from typing import Literal
+from typing import Literal, Sequence
 
 import pandas as pd
 from pydantic import BaseModel, computed_field, model_validator
 from typing_extensions import Self
 
-from ._status import BodyPart, EventType, PassResult, ShotPattern, ShotResult
+from ._status import (
+    BodyPart,
+    EventType,
+    PassResult,
+    Period,
+    ShotPattern,
+    ShotResult,
+)
 
 
 class Competition(BaseModel):
@@ -62,6 +69,7 @@ class Location(BaseModel):
 class Event(BaseModel):
     id: str
     type: EventType
+    period: Period
     seconds: float
 
 
@@ -88,10 +96,10 @@ class Game(BaseModel):
     datetime: datetime
     home_team: Team
     away_team: Team
-    home_players: list[Player]
-    away_players: list[Player]
+    home_players: Sequence[Player]
+    away_players: Sequence[Player]
     competition: Competition
-    events: list[Shot | Pass]
+    events: Sequence[Shot | Pass]
 
     @computed_field  # type: ignore
     @property

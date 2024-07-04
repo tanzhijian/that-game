@@ -13,7 +13,7 @@ from .._models import (
     Shot,
     Team,
 )
-from .._status import BodyPart, EventType, ShotPattern, ShotResult
+from .._status import BodyPart, EventType, Period, ShotPattern, ShotResult
 
 
 def load_statsbomb(
@@ -146,6 +146,7 @@ class StatsBombLoader:
                 continue
 
             id_ = event["id"]
+            period = PERIODS[event["period"]]
             seconds = self._transform_timestamp(event["timestamp"])
             team = self._teams[str(event["team"]["id"])]
             player = self._find_player(str(event["player"]["id"]))
@@ -160,6 +161,7 @@ class StatsBombLoader:
                     event = Shot(
                         id=id_,
                         type=type_,
+                        period=period,
                         seconds=seconds,
                         team=team,
                         player=player,
@@ -179,6 +181,7 @@ class StatsBombLoader:
                     event = Pass(
                         id=id_,
                         type=type_,
+                        period=period,
                         seconds=seconds,
                         team=team,
                         player=player,
@@ -242,4 +245,11 @@ SHOT_RESULTS: dict[str, ShotResult] = {
     "Blocked": "blocked",
     "Saved Off T": "saved",
     "Saved To Post": "saved",
+}
+PERIODS: dict[int, Period] = {
+    1: "first_half",
+    2: "second_half",
+    3: "first_extra",
+    4: "second_extra",
+    5: "penalty_shootout",
 }
