@@ -108,7 +108,10 @@ class TestPosition:
 
     def test_transform(self, location: Location) -> None:
         pitch = Pitch(
-            length=100, width=100, x_direction="left", y_direction="down"
+            length=100,
+            width=100,
+            length_direction="left",
+            width_direction="down",
         )
         location.transform(pitch)
         assert int(location.x) == 60

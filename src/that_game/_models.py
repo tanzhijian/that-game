@@ -32,10 +32,10 @@ class Team(BaseModel):
 
 
 class Pitch(BaseModel):
-    length: int
-    width: int
-    x_direction: Literal["left", "right"] = "right"
-    y_direction: Literal["up", "down"] = "up"
+    length: float
+    width: float
+    length_direction: Literal["left", "right"] = "right"
+    width_direction: Literal["up", "down"] = "up"
 
 
 class Location(BaseModel):
@@ -59,9 +59,9 @@ class Location(BaseModel):
         self.x = self.x * x_scale
         self.y = self.y * y_scale
 
-        if pitch.x_direction == "left":
+        if pitch.length_direction == "left":
             self.x = pitch.length - self.x
-        if pitch.y_direction == "down":
+        if pitch.width_direction == "down":
             self.y = pitch.width - self.y
         self.pitch = pitch
 
