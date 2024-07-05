@@ -8,6 +8,7 @@ from typing_extensions import Self
 from ._status import (
     BodyPart,
     EventType,
+    PassPattern,
     PassResult,
     Period,
     ShotPattern,
@@ -111,6 +112,8 @@ class Pass(Event):
     location: Location
     end_location: Location
     result: PassResult
+    body_part: BodyPart
+    pattern: PassPattern
 
 
 class Game(BaseModel):

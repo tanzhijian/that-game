@@ -7,9 +7,17 @@ Period = Literal[
     "second_extra",
     "penalty_shootout",
 ]
-BodyPart = Literal["right_foot", "left_foot", "head", "other"]
+BodyPart = Literal[
+    "right_foot",
+    "left_foot",
+    "head",
+    "hand",
+    "other",
+    "unknown",
+]
 
 ShotPattern = Literal["freekick", "penalty", "open_play"]
+PassPattern = Literal["general", "high_pass"]
 
 ShotResult = Literal[
     "goal",

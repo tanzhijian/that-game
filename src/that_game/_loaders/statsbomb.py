@@ -12,7 +12,14 @@ from .._models import (
     Shot,
     Team,
 )
-from .._status import BodyPart, EventType, Period, ShotPattern, ShotResult
+from .._status import (
+    BodyPart,
+    EventType,
+    PassPattern,
+    Period,
+    ShotPattern,
+    ShotResult,
+)
 
 
 def load_statsbomb(
@@ -183,6 +190,13 @@ class StatsBombLoader:
                         result=SHOT_RESULTS[event["shot"]["outcome"]["name"]],
                     )
                 case "pass":
+                    pass_ = event["pass"]
+                    try:
+                        body_part = BODY_PARTS[pass_["body_part"]["name"]]
+                    except KeyError:
+                        body_part = "unknown"
+                    result = "fail" if pass_.get("outcome") else "success"
+
                     event = Pass(
                         id=id_,
                         type=type_,
@@ -192,13 +206,13 @@ class StatsBombLoader:
                         player=player,
                         location=location,
                         end_location=Location(
-                            x=event["pass"]["end_location"][0],
-                            y=event["pass"]["end_location"][1],
+                            x=pass_["end_location"][0],
+                            y=pass_["end_location"][1],
                             pitch=self.pitch,
                         ),
-                        result="fail"
-                        if event["pass"].get("outcome")
-                        else "success",
+                        result=result,
+                        body_part=body_part,
+                        pattern=PASS_PATTERNS[pass_["height"]["name"]],
                     )
                 case _:
                     raise ValueError(f"Check event, index: {event['index']}")
@@ -231,6 +245,8 @@ BODY_PARTS: dict[str, BodyPart] = {
     "Left Foot": "left_foot",
     "Head": "head",
     "Other": "other",
+    "Drop Kick": "other",
+    "Keeper Arm": "hand",
 }
 
 SHOT_PATTERNS: dict[str, ShotPattern] = {
@@ -250,6 +266,11 @@ SHOT_RESULTS: dict[str, ShotResult] = {
     "Blocked": "blocked",
     "Saved Off T": "saved",
     "Saved To Post": "saved",
+}
+PASS_PATTERNS: dict[str, PassPattern] = {
+    "Ground Pass": "general",
+    "Low Pass": "general",
+    "High Pass": "high_pass",
 }
 PERIODS: dict[int, Period] = {
     1: "first_half",
