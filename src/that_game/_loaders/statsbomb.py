@@ -191,10 +191,14 @@ class StatsBombLoader:
                     )
                 case "pass":
                     pass_ = event["pass"]
+
                     try:
-                        body_part = BODY_PARTS[pass_["body_part"]["name"]]
+                        body_part_obj = pass_["body_part"]
                     except KeyError:
                         body_part = "unknown"
+                    else:
+                        body_part = BODY_PARTS[body_part_obj["name"]]
+
                     result = "fail" if pass_.get("outcome") else "success"
 
                     event = Pass(
