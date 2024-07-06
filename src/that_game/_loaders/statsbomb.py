@@ -146,26 +146,29 @@ class StatsBombLoader:
     @property
     def events(self) -> list[Shot | Pass]:
         events: list[Shot | Pass] = []
-        for event in self._raw_events:
+        for raw_event in self._raw_events:
             # 目前只处理两种事件，射门和传球
-            if (type_ := EVENT_TYPES.get(event["type"]["name"])) is None:
+            if (type_ := EVENT_TYPES.get(raw_event["type"]["name"])) is None:
                 continue
 
-            id_ = event["id"]
-            period = PERIODS[event["period"]]
-            seconds = self._transform_timestamp(event["timestamp"])
-            team = self._teams[str(event["team"]["id"])]
-            player = self._find_player(str(event["player"]["id"]))
+            id_ = raw_event["id"]
+            period = PERIODS[raw_event["period"]]
+            seconds = self._transform_timestamp(raw_event["timestamp"])
+            team = self._teams[str(raw_event["team"]["id"])]
+            player = self._find_player(str(raw_event["player"]["id"]))
             location = Location(
-                x=event["location"][0],
-                y=event["location"][1],
+                x=raw_event["location"][0],
+                y=raw_event["location"][1],
                 pitch=self.pitch,
             )
 
+            event: Shot | Pass
             match type_:
                 case "shot":
+                    shot = raw_event["shot"]
+
                     try:
-                        z = event["shot"]["end_location"][2]
+                        z = shot["end_location"][2]
                     except IndexError:
                         z = None
 
@@ -178,19 +181,17 @@ class StatsBombLoader:
                         player=player,
                         location=location,
                         end_location=Location(
-                            x=event["shot"]["end_location"][0],
-                            y=event["shot"]["end_location"][1],
+                            x=shot["end_location"][0],
+                            y=shot["end_location"][1],
                             z=z,
                             pitch=self.pitch,
                         ),
-                        pattern=SHOT_PATTERNS[event["shot"]["type"]["name"]],
-                        body_part=BODY_PARTS[
-                            event["shot"]["body_part"]["name"]
-                        ],
-                        result=SHOT_RESULTS[event["shot"]["outcome"]["name"]],
+                        pattern=SHOT_PATTERNS[shot["type"]["name"]],
+                        body_part=BODY_PARTS[shot["body_part"]["name"]],
+                        result=SHOT_RESULTS[shot["outcome"]["name"]],
                     )
                 case "pass":
-                    pass_ = event["pass"]
+                    pass_ = raw_event["pass"]
 
                     try:
                         body_part_obj = pass_["body_part"]
@@ -219,7 +220,9 @@ class StatsBombLoader:
                         pattern=PASS_PATTERNS[pass_["height"]["name"]],
                     )
                 case _:
-                    raise ValueError(f"Check event, index: {event['index']}")
+                    raise ValueError(
+                        f"Check event, index: {raw_event['index']}"
+                    )
 
             events.append(event)
 
