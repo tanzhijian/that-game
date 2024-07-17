@@ -2,8 +2,7 @@ from datetime import datetime
 from typing import Literal, Sequence
 
 import pandas as pd
-from pydantic import BaseModel, Field, computed_field, model_validator
-from typing_extensions import Self
+from pydantic import BaseModel, Field, computed_field
 
 from ._status import (
     BodyPart,
@@ -60,14 +59,7 @@ class Location(BaseModel):
     x: float
     y: float
     z: float | None = None
-    pitch: Pitch = Field(exclude=True)
-
-    _standard_pitch = Pitch(length=108, width=68)
-
-    @model_validator(mode="after")
-    def _init_transform(self) -> Self:
-        self.transform(self._standard_pitch)
-        return self
+    pitch: Pitch
 
     def transform(self, pitch: Pitch) -> None:
         if pitch == self.pitch:
