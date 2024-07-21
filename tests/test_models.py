@@ -104,9 +104,9 @@ class TestLocation:
     @pytest.fixture
     def location(self) -> Location:
         return Location(
-            x=0.4,
-            y=0.6,
-            pitch=Pitch(length=1, width=1),
+            x=60,
+            y=40,
+            pitch=Pitch(length=100, width=60),
         )
 
     @pytest.fixture
@@ -119,19 +119,28 @@ class TestLocation:
         )
 
     def test_init(self, location: Location) -> None:
-        assert int(location.x * 10) == 4
-        assert int(location.pitch.length) == 1
+        assert int(location.x) == 60
+        assert int(location.pitch.length) == 100
 
     def test_transform(self, location: Location) -> None:
         pitch = Pitch(
-            length=100,
-            width=100,
+            length=120,
+            width=80,
+        )
+        location.transform(pitch)
+        assert int(location.x) == 72
+        assert int(location.y) == 53
+
+    def test_transform_direction_flip(self, location: Location) -> None:
+        pitch = Pitch(
+            length=120,
+            width=80,
             length_direction="left",
             width_direction="down",
         )
         location.transform(pitch)
-        assert int(location.x) == 60
-        assert int(location.y) == 40
+        assert int(location.x) == 48
+        assert int(location.y) == 26
 
     def test_z(self, location_include_z: Location) -> None:
         if location_include_z.z is not None:

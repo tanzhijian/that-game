@@ -72,11 +72,15 @@ class Location(BaseModel):
         if self.z is not None and not is_float_close(
             pitch.height_scale_to_meter, self.pitch.height_scale_to_meter
         ):
-            self.z = self.z * pitch.height_scale_to_meter
+            z_scale = (
+                pitch.height_scale_to_meter / self.pitch.height_scale_to_meter
+            )
+            self.z = self.z * z_scale
+            self.pitch.height_scale_to_meter = pitch.height_scale_to_meter
 
-        if pitch.length_direction == "left":
+        if self.pitch.length_direction != pitch.length_direction:
             self.x = pitch.length - self.x
-        if pitch.width_direction == "down":
+        if self.pitch.width_direction != pitch.width_direction:
             self.y = pitch.width - self.y
         self.pitch = pitch
 
