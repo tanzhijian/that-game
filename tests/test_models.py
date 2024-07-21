@@ -142,6 +142,12 @@ class TestLocation:
         assert int(location.x) == 48
         assert int(location.y) == 26
 
+    def test_transform_transpose(self, location: Location) -> None:
+        pitch = Pitch(length=60, width=100, width_direction="down")
+        location.transform(pitch)
+        assert int(location.x) == 40
+        assert int(location.y) == 60
+
     def test_z(self, location_include_z: Location) -> None:
         if location_include_z.z is not None:
             assert is_float_close(location_include_z.z, 2.3)

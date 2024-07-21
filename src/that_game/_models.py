@@ -54,6 +54,10 @@ class Pitch(BaseModel):
                 return False
         return True
 
+    @property
+    def transpose(self) -> bool:
+        return False if self.length > self.width else True
+
 
 class Location(BaseModel):
     x: float
@@ -65,23 +69,36 @@ class Location(BaseModel):
         if pitch == self.pitch:
             return
 
-        x_scale = pitch.length / self.pitch.length
-        y_scale = pitch.width / self.pitch.width
-        self.x = self.x * x_scale
-        self.y = self.y * y_scale
-        if self.z is not None and not is_float_close(
-            pitch.height_scale_to_meter, self.pitch.height_scale_to_meter
-        ):
-            z_scale = (
+        if self.pitch.transpose != pitch.transpose:
+            self.x, self.y = self.y, self.x
+            length = self.pitch.width
+            width = self.pitch.length
+            if self.pitch.width_direction == "up":
+                length_direction = "right"
+            else:
+                length_direction = "left"
+            if self.pitch.length_direction == "right":
+                width_direction = "down"
+            else:
+                width_direction = "up"
+        else:
+            length = self.pitch.length
+            width = self.pitch.width
+            length_direction = self.pitch.length_direction
+            width_direction = self.pitch.width_direction
+
+        self.x *= pitch.length / length
+        self.y *= pitch.width / width
+        if self.z is not None:
+            self.z *= (
                 pitch.height_scale_to_meter / self.pitch.height_scale_to_meter
             )
-            self.z = self.z * z_scale
-            self.pitch.height_scale_to_meter = pitch.height_scale_to_meter
 
-        if self.pitch.length_direction != pitch.length_direction:
+        if length_direction != pitch.length_direction:
             self.x = pitch.length - self.x
-        if self.pitch.width_direction != pitch.width_direction:
+        if width_direction != pitch.width_direction:
             self.y = pitch.width - self.y
+
         self.pitch = pitch
 
 
