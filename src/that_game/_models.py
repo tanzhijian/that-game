@@ -38,6 +38,7 @@ class Pitch(BaseModel):
     length_direction: Literal["left", "right"] = "right"
     width_direction: Literal["up", "down"] = "up"
     height_scale_to_meter: float = Field(default=1.0, gt=0)
+    transpose: bool = Field(default=False, exclude=True)
 
     def __eq__(self, other: object) -> bool:
         """重写等于方法，以支持浮点数的容差比较。"""
@@ -53,10 +54,6 @@ class Pitch(BaseModel):
             elif value1 != value2:
                 return False
         return True
-
-    @property
-    def transpose(self) -> bool:
-        return False if self.length > self.width else True
 
 
 class Location(BaseModel):
