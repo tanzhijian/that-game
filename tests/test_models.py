@@ -88,7 +88,7 @@ class TestGame:
 
     def test_model_dump_pandas(self, game: Game) -> None:
         df = game.model_dump_pandas()
-        assert df.shape == (1, 26)
+        assert df.shape == (1, 28)
         event = df.iloc[0]
         assert event["id"] == "0001"
         assert event["team.name"] == "Arsenal"
@@ -144,7 +144,10 @@ class TestLocation:
 
     def test_transform_transpose(self, location: Location) -> None:
         pitch = Pitch(
-            length=60, width=100, width_direction="down", transpose=True
+            length=60,
+            width=100,
+            width_direction="down",
+            goal_direction="up_down",
         )
         location.transform(pitch)
         assert int(location.x) == 40

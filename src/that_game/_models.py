@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Literal, Sequence
 
 import pandas as pd
-from pydantic import BaseModel, Field, computed_field
+from pydantic import BaseModel, ConfigDict, Field, computed_field
 
 from ._status import (
     BodyPart,
@@ -33,12 +33,14 @@ class Team(BaseModel):
 
 
 class Pitch(BaseModel):
+    model_config = ConfigDict(frozen=True)
+
     length: float
     width: float
     length_direction: Literal["left", "right"] = "right"
     width_direction: Literal["up", "down"] = "up"
+    goal_direction: Literal["up_down", "left_right"] = "left_right"
     height_scale_to_meter: float = Field(default=1.0, gt=0)
-    transpose: bool = Field(default=False, exclude=True)
 
     def __eq__(self, other: object) -> bool:
         """重写等于方法，以支持浮点数的容差比较。"""
@@ -66,7 +68,7 @@ class Location(BaseModel):
         if pitch == self.pitch:
             return
 
-        if self.pitch.transpose != pitch.transpose:
+        if self.pitch.goal_direction != pitch.goal_direction:
             self.x, self.y = self.y, self.x
             length = self.pitch.width
             width = self.pitch.length
