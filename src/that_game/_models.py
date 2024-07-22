@@ -30,6 +30,7 @@ class Player(BaseModel):
 class Team(BaseModel):
     id: str
     name: str
+    color: str | None = None
 
 
 class Pitch(BaseModel):
