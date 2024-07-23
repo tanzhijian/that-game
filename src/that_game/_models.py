@@ -40,7 +40,7 @@ class Pitch(BaseModel):
     width: float
     length_direction: Literal["left", "right"] = "right"
     width_direction: Literal["up", "down"] = "up"
-    goal_direction: Literal["up_down", "left_right"] = "left_right"
+    vertical: bool = False
     height_scale_to_meter: float = Field(default=1.0, gt=0)
 
     def __eq__(self, other: object) -> bool:
@@ -69,7 +69,7 @@ class Location(BaseModel):
         if pitch == self.pitch:
             return
 
-        if self.pitch.goal_direction != pitch.goal_direction:
+        if self.pitch.vertical != pitch.vertical:
             self.x, self.y = self.y, self.x
             length = self.pitch.width
             width = self.pitch.length

@@ -142,12 +142,12 @@ class TestLocation:
         assert int(location.x) == 48
         assert int(location.y) == 26
 
-    def test_transform_transpose(self, location: Location) -> None:
+    def test_transform_vertical(self, location: Location) -> None:
         pitch = Pitch(
             length=60,
             width=100,
             width_direction="down",
-            goal_direction="up_down",
+            vertical=True,
         )
         location.transform(pitch)
         assert int(location.x) == 40
