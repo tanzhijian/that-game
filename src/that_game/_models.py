@@ -2,6 +2,8 @@ from datetime import datetime
 from typing import Literal, Sequence
 
 import pandas as pd
+from mplsoccer import Pitch as GeneralPitchLib
+from mplsoccer import VerticalPitch as VerticalPitchLib
 from pydantic import BaseModel, ConfigDict, Field, computed_field
 
 from ._status import (
@@ -57,6 +59,15 @@ class Pitch(BaseModel):
             elif value1 != value2:
                 return False
         return True
+
+    def draw(self) -> None:
+        if self.vertical:
+            PitchLib = VerticalPitchLib
+        else:
+            PitchLib = GeneralPitchLib
+
+        pitch = PitchLib(pitch_length=self.length, pitch_width=self.width)
+        pitch.draw()
 
 
 class Location(BaseModel):
