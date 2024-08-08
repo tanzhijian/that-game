@@ -1,6 +1,7 @@
 from datetime import datetime
 from typing import Literal, Sequence
 
+import matplotlib.pyplot as plt
 import pandas as pd
 from mplsoccer import Pitch as GeneralPitchLib
 from mplsoccer import VerticalPitch as VerticalPitchLib
@@ -60,14 +61,19 @@ class Pitch(BaseModel):
                 return False
         return True
 
-    def draw(self) -> None:
+    def draw(self) -> GeneralPitchLib | VerticalPitchLib:
         if self.vertical:
             PitchLib = VerticalPitchLib
         else:
             PitchLib = GeneralPitchLib
 
         pitch = PitchLib(pitch_length=self.length, pitch_width=self.width)
+        return pitch
+
+    def show(self) -> None:
+        pitch = self.draw()
         pitch.draw()
+        plt.show()
 
 
 class Location(BaseModel):
@@ -101,9 +107,7 @@ class Location(BaseModel):
         self.x *= pitch.length / length
         self.y *= pitch.width / width
         if self.z is not None:
-            self.z *= (
-                pitch.height_scale_to_meter / self.pitch.height_scale_to_meter
-            )
+            self.z *= pitch.height_scale_to_meter / self.pitch.height_scale_to_meter
 
         if length_direction != pitch.length_direction:
             self.x = pitch.length - self.x
@@ -111,6 +115,12 @@ class Location(BaseModel):
             self.y = pitch.width - self.y
 
         self.pitch = pitch
+
+    def show(self) -> None:
+        pitch = self.pitch.draw()
+        fig, ax = pitch.grid(axis=False)
+        pitch.scatter(x=self.x, y=self.y, s=500, ax=ax["pitch"])
+        plt.show()
 
 
 class Event(BaseModel):
