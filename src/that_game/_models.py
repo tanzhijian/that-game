@@ -67,7 +67,13 @@ class Pitch(BaseModel):
         else:
             PitchLib = GeneralPitchLib
 
-        pitch = PitchLib(pitch_length=self.length, pitch_width=self.width)
+        pitch = PitchLib(
+            pitch_type="custom",
+            pitch_length=self.length,
+            pitch_width=self.width,
+            axis=True,
+            label=True,
+        )
         return pitch
 
     def show(self) -> None:
@@ -138,6 +144,25 @@ class Shot(Event):
     pattern: ShotPattern
     body_part: BodyPart
     result: ShotResult
+
+    def show(self) -> None:
+        pitch = self.location.pitch.draw()
+        fig, ax = pitch.grid(axis=False)
+        pitch.scatter(
+            x=self.location.x,
+            y=self.location.y,
+            s=500,
+            ax=ax["pitch"],
+        )
+        pitch.lines(
+            self.location.x,
+            self.location.y,
+            self.end_location.x,
+            self.end_location.y,
+            ax=ax["pitch"],
+            color="blue",
+        )
+        plt.show()
 
 
 class Pass(Event):
