@@ -24,6 +24,7 @@ dev-dependencies = [
     "ruff>=0.4.7",
     "mypy>=1.10.0",
     "pytest>=8.2.2",
+    "ipykernel>=6.29.5",
 ]
 
 [tool.hatch.metadata]
