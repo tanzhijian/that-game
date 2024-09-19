@@ -45,3 +45,7 @@ plugins = ["pydantic.mypy"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests",]
+
+[tool.pyright]
+venvPath = "."
+venv = ".venv"
