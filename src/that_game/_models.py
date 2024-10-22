@@ -1,8 +1,9 @@
 from datetime import datetime
-from typing import Literal, Sequence
+from typing import Literal, Sequence, cast
 
 import matplotlib.pyplot as plt
 import pandas as pd
+from matplotlib.axes import Axes
 from mplsoccer import Pitch as GeneralPitchLib
 from mplsoccer import VerticalPitch as VerticalPitchLib
 from pydantic import BaseModel, ConfigDict, Field, computed_field
@@ -61,7 +62,7 @@ class Pitch(BaseModel):
                 return False
         return True
 
-    def draw(self) -> GeneralPitchLib | VerticalPitchLib:
+    def draw(self) -> tuple[GeneralPitchLib | VerticalPitchLib, Axes]:
         if self.vertical:
             PitchLib = VerticalPitchLib
         else:
@@ -74,11 +75,17 @@ class Pitch(BaseModel):
             axis=True,
             label=True,
         )
-        return pitch
+        _, ax = pitch.draw()
+        ax = cast(Axes, ax)
+
+        if self.length_direction == "left":
+            ax.invert_xaxis()
+        if self.width_direction == "down":
+            ax.invert_yaxis()
+        return pitch, ax
 
     def show(self) -> None:
-        pitch = self.draw()
-        pitch.draw()
+        self.draw()
         plt.show()
 
 
@@ -123,9 +130,8 @@ class Location(BaseModel):
         self.pitch = pitch
 
     def show(self) -> None:
-        pitch = self.pitch.draw()
-        fig, ax = pitch.grid(axis=False)
-        pitch.scatter(x=self.x, y=self.y, s=500, ax=ax["pitch"])
+        pitch, ax = self.pitch.draw()
+        pitch.scatter(x=self.x, y=self.y, s=500, ax=ax)
         plt.show()
 
 
@@ -146,20 +152,19 @@ class Shot(Event):
     result: ShotResult
 
     def show(self) -> None:
-        pitch = self.location.pitch.draw()
-        fig, ax = pitch.grid(axis=False)
+        pitch, ax = self.location.pitch.draw()
         pitch.scatter(
             x=self.location.x,
             y=self.location.y,
             s=500,
-            ax=ax["pitch"],
+            ax=ax,
         )
         pitch.lines(
             self.location.x,
             self.location.y,
             self.end_location.x,
             self.end_location.y,
-            ax=ax["pitch"],
+            ax=ax,
             color="blue",
         )
         plt.show()
