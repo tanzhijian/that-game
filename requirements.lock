@@ -24,11 +24,11 @@ idna==3.7
     # via requests
 kiwisolver==1.4.5
     # via matplotlib
-matplotlib==3.9.1
+matplotlib==3.9.2
     # via mplsoccer
     # via seaborn
     # via that-game
-mplsoccer==1.2.4
+mplsoccer==1.4.0
     # via that-game
 numpy==1.26.4
     # via contourpy
@@ -39,16 +39,16 @@ numpy==1.26.4
     # via seaborn
 packaging==24.1
     # via matplotlib
-pandas==2.2.2
+pandas==2.2.3
     # via mplsoccer
     # via seaborn
     # via that-game
 pillow==10.4.0
     # via matplotlib
     # via mplsoccer
-pydantic==2.7.4
+pydantic==2.9.2
     # via that-game
-pydantic-core==2.18.4
+pydantic-core==2.23.4
     # via pydantic
 pyparsing==3.1.2
     # via matplotlib

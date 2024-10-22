@@ -1,4 +1,5 @@
 import pytest
+
 from that_game._loaders.statsbomb import load_statsbomb
 from that_game._models import Game
 

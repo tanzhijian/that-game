@@ -1,4 +1,5 @@
 import pytest
+
 from that_game._models import (
     Competition,
     Game,
