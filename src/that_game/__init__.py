@@ -10,16 +10,20 @@ from ._models import (
     Shot,
     Team,
 )
+from ._visualization import LocationVisualization, PitchVisualization, ShotVisualization
 
 __all__ = (
     "Competition",
     "Event",
     "Game",
     "Location",
+    "LocationVisualization",
     "Pass",
     "Pitch",
+    "PitchVisualization",
     "Player",
     "Shot",
+    "ShotVisualization",
     "Team",
     "load_statsbomb",
 )

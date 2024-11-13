@@ -1,11 +1,7 @@
 from datetime import datetime
-from typing import Literal, Sequence, cast
+from typing import Any, Literal, Sequence
 
-import matplotlib.pyplot as plt
 import pandas as pd
-from matplotlib.axes import Axes
-from mplsoccer import Pitch as GeneralPitchLib
-from mplsoccer import VerticalPitch as VerticalPitchLib
 from pydantic import BaseModel, ConfigDict, Field, computed_field
 
 from ._status import (
@@ -62,32 +58,6 @@ class Pitch(BaseModel):
                 return False
         return True
 
-    def draw(self) -> tuple[GeneralPitchLib | VerticalPitchLib, Axes]:
-        if self.vertical:
-            PitchLib = VerticalPitchLib
-        else:
-            PitchLib = GeneralPitchLib
-
-        pitch = PitchLib(
-            pitch_type="custom",
-            pitch_length=self.length,
-            pitch_width=self.width,
-            axis=True,
-            label=True,
-        )
-        _, ax = pitch.draw()
-        ax = cast(Axes, ax)
-
-        if self.length_direction == "left":
-            ax.invert_xaxis()
-        if self.width_direction == "down":
-            ax.invert_yaxis()
-        return pitch, ax
-
-    def show(self) -> None:
-        self.draw()
-        plt.show()
-
 
 class Location(BaseModel):
     x: float
@@ -129,11 +99,6 @@ class Location(BaseModel):
 
         self.pitch = pitch
 
-    def show(self) -> None:
-        pitch, ax = self.pitch.draw()
-        pitch.scatter(x=self.x, y=self.y, s=500, ax=ax)
-        plt.show()
-
 
 class Event(BaseModel):
     id: str
@@ -150,24 +115,6 @@ class Shot(Event):
     pattern: ShotPattern
     body_part: BodyPart
     result: ShotResult
-
-    def show(self) -> None:
-        pitch, ax = self.location.pitch.draw()
-        pitch.scatter(
-            x=self.location.x,
-            y=self.location.y,
-            s=500,
-            ax=ax,
-        )
-        pitch.lines(
-            self.location.x,
-            self.location.y,
-            self.end_location.x,
-            self.end_location.y,
-            ax=ax,
-            color="blue",
-        )
-        plt.show()
 
 
 class Pass(Event):
@@ -188,7 +135,7 @@ class Game(BaseModel):
     home_players: Sequence[Player]
     away_players: Sequence[Player]
     competition: Competition
-    events: Sequence[Shot | Pass]
+    events: Sequence[Any]
 
     @computed_field  # type: ignore
     @property
