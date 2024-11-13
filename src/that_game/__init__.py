@@ -10,7 +10,12 @@ from ._models import (
     Shot,
     Team,
 )
-from ._visualization import LocationVisualization, PitchVisualization, ShotVisualization
+from ._visualization import (
+    LocationVisualization,
+    PitchVisualization,
+    ShotsVisualization,
+    ShotVisualization,
+)
 
 __all__ = (
     "Competition",
@@ -24,6 +29,7 @@ __all__ = (
     "Player",
     "Shot",
     "ShotVisualization",
+    "ShotsVisualization",
     "Team",
     "load_statsbomb",
 )

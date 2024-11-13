@@ -1,4 +1,4 @@
-from typing import cast
+from typing import Sequence, cast
 
 import matplotlib.pyplot as plt
 from matplotlib.axes import Axes
@@ -75,4 +75,28 @@ class ShotVisualization:
             ax=ax,
             color="blue",
         )
+        plt.show()
+
+
+class ShotsVisualization:
+    def __init__(self, shots: Sequence[Shot]) -> None:
+        self.shots = shots
+
+    def show(self) -> None:
+        mpl_pitch, ax = _create_mpl_pitch_and_ax(self.shots[0].location.pitch)
+        for shot in self.shots:
+            mpl_pitch.scatter(
+                x=shot.location.x,
+                y=shot.location.y,
+                s=500,
+                ax=ax,
+            )
+            mpl_pitch.lines(
+                shot.location.x,
+                shot.location.y,
+                shot.end_location.x,
+                shot.end_location.y,
+                ax=ax,
+                color="blue",
+            )
         plt.show()
