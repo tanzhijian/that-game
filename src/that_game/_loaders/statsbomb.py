@@ -1,6 +1,6 @@
 import json
-import typing
 from datetime import datetime
+from typing import Any
 
 from .._models import (
     Competition,
@@ -56,15 +56,11 @@ class StatsBombLoader:
         )
 
         self._teams = {
-            (
-                home_team_id := str(self._raw_game["home_team"]["home_team_id"])
-            ): Team(
+            (home_team_id := str(self._raw_game["home_team"]["home_team_id"])): Team(
                 id=home_team_id,
                 name=self._raw_game["home_team"]["home_team_name"],
             ),
-            (
-                away_team_id := str(self._raw_game["away_team"]["away_team_id"])
-            ): Team(
+            (away_team_id := str(self._raw_game["away_team"]["away_team_id"])): Team(
                 id=away_team_id,
                 name=self._raw_game["away_team"]["away_team_name"],
             ),
@@ -93,7 +89,7 @@ class StatsBombLoader:
         }
         return home_players, away_players
 
-    def _parse_player(self, player_dict: typing.Any) -> Player:
+    def _parse_player(self, player_dict: Any) -> Player:
         try:
             position = player_dict["positions"][0]["position"]
         except IndexError:
@@ -129,9 +125,7 @@ class StatsBombLoader:
         return self._pitch
 
     def _find_player(self, player_id: str) -> Player:
-        return (
-            self._home_players.get(player_id) or self._away_players[player_id]
-        )
+        return self._home_players.get(player_id) or self._away_players[player_id]
 
     def _transform_timestamp(self, time_str: str) -> float:
         time_obj = datetime.strptime(time_str, "%H:%M:%S.%f")
@@ -143,89 +137,101 @@ class StatsBombLoader:
         )
         return seconds
 
+    def _parse_common_fields(
+        self, raw_event: dict[str, Any]
+    ) -> tuple[str, Period, float, Team, Player, Location]:
+        id_ = raw_event["id"]
+        period = PERIODS[raw_event["period"]]
+        seconds = self._transform_timestamp(raw_event["timestamp"])
+        team = self._teams[str(raw_event["team"]["id"])]
+        player = self._find_player(str(raw_event["player"]["id"]))
+        location = Location(
+            x=raw_event["location"][0],
+            y=raw_event["location"][1],
+            pitch=self.pitch,
+        )
+        return id_, period, seconds, team, player, location
+
+    def _parse_shot(self, raw_event: dict[str, Any]) -> Shot:
+        id_, period, seconds, team, player, location = self._parse_common_fields(
+            raw_event
+        )
+        raw_shot = raw_event["shot"]
+
+        try:
+            z = raw_shot["end_location"][2]
+        except IndexError:
+            z = None
+
+        return Shot(
+            id=id_,
+            type="shot",
+            period=period,
+            seconds=seconds,
+            team=team,
+            player=player,
+            location=location,
+            end_location=Location(
+                x=raw_shot["end_location"][0],
+                y=raw_shot["end_location"][1],
+                z=z,
+                pitch=self.pitch,
+            ),
+            pattern=SHOT_PATTERNS[raw_shot["type"]["name"]],
+            body_part=BODY_PARTS[raw_shot["body_part"]["name"]],
+            result=SHOT_RESULTS[raw_shot["outcome"]["name"]],
+        )
+
+    def _parse_pass(self, raw_event: dict[str, Any]) -> Pass:
+        id_, period, seconds, team, player, location = self._parse_common_fields(
+            raw_event
+        )
+        raw_pass = raw_event["pass"]
+        result = "fail" if raw_pass.get("outcome") else "success"
+
+        try:
+            body_part_obj = raw_pass["body_part"]
+        except KeyError:
+            body_part = "unknown"
+        else:
+            body_part = BODY_PARTS[body_part_obj["name"]]
+
+        return Pass(
+            id=id_,
+            type="pass",
+            period=period,
+            seconds=seconds,
+            team=team,
+            player=player,
+            location=location,
+            end_location=Location(
+                x=raw_pass["end_location"][0],
+                y=raw_pass["end_location"][1],
+                pitch=self.pitch,
+            ),
+            result=result,
+            body_part=body_part,
+            pattern=PASS_PATTERNS[raw_pass["height"]["name"]],
+        )
+
     @property
-    def events(self) -> list[Shot | Pass]:
-        events: list[Shot | Pass] = []
+    def events(self) -> list[Any]:
+        events = []
         for raw_event in self._raw_events:
             # 目前只处理两种事件，射门和传球
             if (type_ := EVENT_TYPES.get(raw_event["type"]["name"])) is None:
                 continue
 
-            id_ = raw_event["id"]
-            period = PERIODS[raw_event["period"]]
-            seconds = self._transform_timestamp(raw_event["timestamp"])
-            team = self._teams[str(raw_event["team"]["id"])]
-            player = self._find_player(str(raw_event["player"]["id"]))
-            location = Location(
-                x=raw_event["location"][0],
-                y=raw_event["location"][1],
-                pitch=self.pitch,
-            )
-
-            event: Shot | Pass
+            event: Any
             match type_:
                 case "shot":
-                    shot = raw_event["shot"]
-
-                    try:
-                        z = shot["end_location"][2]
-                    except IndexError:
-                        z = None
-
-                    event = Shot(
-                        id=id_,
-                        type=type_,
-                        period=period,
-                        seconds=seconds,
-                        team=team,
-                        player=player,
-                        location=location,
-                        end_location=Location(
-                            x=shot["end_location"][0],
-                            y=shot["end_location"][1],
-                            z=z,
-                            pitch=self.pitch,
-                        ),
-                        pattern=SHOT_PATTERNS[shot["type"]["name"]],
-                        body_part=BODY_PARTS[shot["body_part"]["name"]],
-                        result=SHOT_RESULTS[shot["outcome"]["name"]],
-                    )
+                    event = self._parse_shot(raw_event)
                 case "pass":
-                    pass_ = raw_event["pass"]
-
-                    try:
-                        body_part_obj = pass_["body_part"]
-                    except KeyError:
-                        body_part = "unknown"
-                    else:
-                        body_part = BODY_PARTS[body_part_obj["name"]]
-
-                    result = "fail" if pass_.get("outcome") else "success"
-
-                    event = Pass(
-                        id=id_,
-                        type=type_,
-                        period=period,
-                        seconds=seconds,
-                        team=team,
-                        player=player,
-                        location=location,
-                        end_location=Location(
-                            x=pass_["end_location"][0],
-                            y=pass_["end_location"][1],
-                            pitch=self.pitch,
-                        ),
-                        result=result,
-                        body_part=body_part,
-                        pattern=PASS_PATTERNS[pass_["height"]["name"]],
-                    )
+                    event = self._parse_pass(raw_event)
                 case _:
-                    raise ValueError(
-                        f"Check event, index: {raw_event['index']}"
-                    )
+                    raise ValueError(f"Check event, index: {raw_event['index']}")
 
             events.append(event)
-
         return events
 
     @property
