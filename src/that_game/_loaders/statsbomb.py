@@ -9,6 +9,7 @@ from .._models import (
     Pass,
     Pitch,
     Player,
+    RelatedPlayer,
     Shot,
     Team,
 )
@@ -163,6 +164,30 @@ class StatsBombLoader:
         except IndexError:
             z = None
 
+        try:
+            related_players = []
+            for item in raw_shot["freeze_frame"]:
+                related_team = team
+                if not item["teammate"]:
+                    another_team_id = next(
+                        id_ for id_ in self._teams if id_ != related_team.id
+                    )
+                    related_team = self._teams[another_team_id]
+
+                related_players.append(
+                    RelatedPlayer(
+                        team=related_team,
+                        player=self._find_player(str(item["player"]["id"])),
+                        location=Location(
+                            x=item["location"][0],
+                            y=item["location"][1],
+                            pitch=self.pitch,
+                        ),
+                    )
+                )
+        except KeyError:
+            related_players = None
+
         return Shot(
             id=id_,
             type="shot",
@@ -170,6 +195,7 @@ class StatsBombLoader:
             seconds=seconds,
             team=team,
             player=player,
+            related_players=related_players,
             location=location,
             end_location=Location(
                 x=raw_shot["end_location"][0],

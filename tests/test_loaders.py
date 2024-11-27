@@ -36,9 +36,21 @@ class TestLoadStatsbomb:
         assert len(game.events) > 0
 
     def test_events_status(self, game: Game) -> None:
-        pass_ = game.passes()[0]
-        shot = game.shots()[0]
+        shots = game.shots()
+        assert len(shots) == 26
+        shot = shots[0]
         assert shot.body_part == "left_foot"
+
+        pass_ = game.passes()[0]
         assert pass_.result == "success"
         assert shot.result == "blocked"
         assert shot.location.z is None
+
+    def test_event_related_players(self, game: Game) -> None:
+        shot = game.shots()[0]
+        if shot.related_players is not None:
+            assert len(shot.related_players) == 19
+            related_player = shot.related_players[0]
+            assert int(related_player.location.x) == 99
+            assert related_player.team.name == "Bayer Leverkusen"
+            assert related_player.player.name == "Patrik Schick"

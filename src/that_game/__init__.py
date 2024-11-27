@@ -7,6 +7,7 @@ from ._models import (
     Pass,
     Pitch,
     Player,
+    RelatedPlayer,
     Shot,
     Team,
 )
@@ -27,6 +28,7 @@ __all__ = (
     "Pitch",
     "PitchVisualization",
     "Player",
+    "RelatedPlayer",
     "Shot",
     "ShotVisualization",
     "ShotsVisualization",

@@ -25,6 +25,7 @@ class Player(BaseModel):
     id: str
     name: str
     position: str
+    jersey_number: int | None = None
 
 
 class Team(BaseModel):
@@ -100,17 +101,24 @@ class Location(BaseModel):
         self.pitch = pitch
 
 
+class RelatedPlayer(BaseModel):
+    team: Team
+    player: Player
+    location: Location
+
+
 class Event(BaseModel):
     id: str
     type: EventType
     period: Period
     seconds: float
+    team: Team
+    player: Player
+    related_players: Sequence[RelatedPlayer] | None = None
+    location: Location
 
 
 class Shot(Event):
-    team: Team
-    player: Player
-    location: Location
     end_location: Location
     pattern: ShotPattern
     body_part: BodyPart
@@ -118,9 +126,6 @@ class Shot(Event):
 
 
 class Pass(Event):
-    team: Team
-    player: Player
-    location: Location
     end_location: Location
     result: PassResult
     body_part: BodyPart
