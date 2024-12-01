@@ -99,6 +99,7 @@ class StatsBombLoader:
             id=str(player_dict["player_id"]),
             name=player_dict["player_name"],
             position=position,
+            jersey_number=player_dict["jersey_number"],
         )
 
     @property

@@ -4,11 +4,20 @@ import matplotlib.pyplot as plt
 from matplotlib.axes import Axes
 from mplsoccer import Pitch as MPLPitchLib
 from mplsoccer import VerticalPitch as MPLVerticalPitchLib
+from mplsoccer._pitch_plot import BasePitchPlot
 
 from ._models import Location, Pitch, Shot
 
 
-def _mpl_pitch_factory(pitch: Pitch) -> MPLPitchLib | MPLVerticalPitchLib:
+class _Colors:
+    background = "black"
+    divide = "white"
+    home_team = "red"
+    away_team = "blue"
+    line = "green"
+
+
+def _mpl_pitch_factory(pitch: Pitch) -> BasePitchPlot:
     if pitch.vertical:
         Lib = MPLVerticalPitchLib
     else:
@@ -24,7 +33,7 @@ def _mpl_pitch_factory(pitch: Pitch) -> MPLPitchLib | MPLVerticalPitchLib:
 
 def _create_mpl_pitch_and_ax(
     pitch: Pitch,
-) -> tuple[MPLPitchLib | MPLVerticalPitchLib, Axes]:
+) -> tuple[BasePitchPlot, Axes]:
     mpl_pitch = _mpl_pitch_factory(pitch)
     _, ax = mpl_pitch.draw()
     ax = cast(Axes, ax)
@@ -51,7 +60,7 @@ class LocationVisualization:
 
     def show(self) -> None:
         mpl_pitch, ax = _create_mpl_pitch_and_ax(self.location.pitch)
-        mpl_pitch.scatter(x=self.location.x, y=self.location.y, s=500, ax=ax)
+        mpl_pitch.scatter(x=self.location.x, y=self.location.y, s=100, ax=ax)
         plt.show()
 
 
@@ -59,22 +68,66 @@ class ShotVisualization:
     def __init__(self, shot: Shot) -> None:
         self.shot = shot
 
+    @property
+    def _team_color(self) -> str:
+        if (color := self.shot.team.color) is not None:
+            return color
+        return "blue"
+
     def show(self) -> None:
         mpl_pitch, ax = _create_mpl_pitch_and_ax(self.shot.location.pitch)
         mpl_pitch.scatter(
             x=self.shot.location.x,
             y=self.shot.location.y,
-            s=500,
+            s=100,
+            color=self._team_color,
             ax=ax,
         )
+
+        if (jersey_number := self.shot.player.jersey_number) is not None:
+            mpl_pitch.annotate(
+                text=jersey_number,
+                xy=(
+                    self.shot.location.x + 0.2,
+                    self.shot.location.y + 0.2,
+                ),
+                ax=ax,
+                color="white",
+                ha="center",
+                va="center",
+                fontsize=7,
+            )
+
         mpl_pitch.lines(
             self.shot.location.x,
             self.shot.location.y,
             self.shot.end_location.x,
             self.shot.end_location.y,
+            color="red",
+            lw=1,
             ax=ax,
-            color="blue",
         )
+
+        if self.shot.related_players is not None:
+            for player in self.shot.related_players:
+                if player.team.name == self.shot.team.name:
+                    mpl_pitch.scatter(
+                        x=player.location.x,
+                        y=player.location.y,
+                        s=100,
+                        ax=ax,
+                        color="blue",
+                        alpha=0.5,
+                    )
+                else:
+                    mpl_pitch.scatter(
+                        x=player.location.x,
+                        y=player.location.y,
+                        s=100,
+                        ax=ax,
+                        color="red",
+                        alpha=0.5,
+                    )
         plt.show()
 
 
@@ -88,7 +141,7 @@ class ShotsVisualization:
             mpl_pitch.scatter(
                 x=shot.location.x,
                 y=shot.location.y,
-                s=500,
+                s=100,
                 ax=ax,
             )
             mpl_pitch.lines(

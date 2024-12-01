@@ -31,7 +31,9 @@ class TestLoadStatsbomb:
         assert game.kick_off == "18:30"
         assert game.competition.id == "9"
 
-        assert game.away_players[0].name == "Granit Xhaka"
+        player = game.away_players[0]
+        assert player.name == "Granit Xhaka"
+        assert player.jersey_number == 34
 
         assert len(game.events) > 0
 
