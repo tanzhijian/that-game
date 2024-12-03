@@ -152,10 +152,15 @@ class Game(BaseModel):
     def kick_off(self) -> str:
         return self.datetime.strftime("%H:%M")
 
-    def model_dump_pandas(self) -> pd.DataFrame:
-        events_dict = self.model_dump(exclude_none=True)["events"]
-        df = pd.json_normalize(events_dict)
-        return df
+    def model_dump_pandas(
+        self,
+        exclude_none: bool = False,
+        json_normalize: bool = True,
+    ) -> pd.DataFrame:
+        events_dict = self.model_dump(exclude_none=exclude_none)["events"]
+        if json_normalize:
+            return pd.json_normalize(events_dict)
+        return pd.DataFrame(events_dict)
 
     def shots(self) -> list[Shot]:
         return [event for event in self.events if isinstance(event, Shot)]
