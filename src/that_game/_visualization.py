@@ -6,15 +6,15 @@ from mplsoccer import Pitch as MPLPitchLib
 from mplsoccer import VerticalPitch as MPLVerticalPitchLib
 from mplsoccer._pitch_plot import BasePitchPlot
 
-from ._models import Location, Pitch, Shot
+from ._models import Location, Pitch, Shot, Team
 
 
 class _Colors:
-    background = "black"
-    divide = "white"
-    home_team = "red"
-    away_team = "blue"
-    line = "green"
+    background = "#f8f9fa"
+    divide = "#dee2e6"
+    home_team = "#dc3545"
+    away_team = "#0d6efd"
+    line = "#198754"
 
 
 def _mpl_pitch_factory(pitch: Pitch) -> BasePitchPlot:
@@ -28,6 +28,8 @@ def _mpl_pitch_factory(pitch: Pitch) -> BasePitchPlot:
         pitch_width=pitch.width,
         axis=True,
         label=True,
+        pitch_color=_Colors.background,
+        line_color=_Colors.divide,
     )
 
 
@@ -72,7 +74,7 @@ class ShotVisualization:
     def _team_color(self) -> str:
         if (color := self.shot.team.color) is not None:
             return color
-        return "blue"
+        return _Colors.home_team
 
     def show(self) -> None:
         mpl_pitch, ax = _create_mpl_pitch_and_ax(self.shot.location.pitch)
@@ -103,7 +105,7 @@ class ShotVisualization:
             self.shot.location.y,
             self.shot.end_location.x,
             self.shot.end_location.y,
-            color="red",
+            color=_Colors.line,
             lw=1,
             ax=ax,
         )
@@ -116,8 +118,8 @@ class ShotVisualization:
                         y=player.location.y,
                         s=100,
                         ax=ax,
-                        color="blue",
-                        alpha=0.5,
+                        color=_Colors.home_team,
+                        alpha=0.7,
                     )
                 else:
                     mpl_pitch.scatter(
@@ -125,8 +127,8 @@ class ShotVisualization:
                         y=player.location.y,
                         s=100,
                         ax=ax,
-                        color="red",
-                        alpha=0.5,
+                        color=_Colors.away_team,
+                        alpha=0.7,
                     )
         plt.show()
 
@@ -134,6 +136,17 @@ class ShotVisualization:
 class ShotsVisualization:
     def __init__(self, shots: Sequence[Shot]) -> None:
         self.shots = shots
+        self._home_taem: Team | None = None
+
+    def _team_color(self, team: Team) -> str:
+        if team.color is not None:
+            return team.color
+        if self._home_taem is None:
+            self._home_taem = team
+            return _Colors.home_team
+        if self._home_taem == team:
+            return _Colors.home_team
+        return _Colors.away_team
 
     def show(self) -> None:
         mpl_pitch, ax = _create_mpl_pitch_and_ax(self.shots[0].location.pitch)
@@ -143,13 +156,15 @@ class ShotsVisualization:
                 y=shot.location.y,
                 s=100,
                 ax=ax,
+                color=self._team_color(shot.team),
             )
             mpl_pitch.lines(
                 shot.location.x,
                 shot.location.y,
                 shot.end_location.x,
                 shot.end_location.y,
+                color=_Colors.line,
+                lw=1,
                 ax=ax,
-                color="blue",
             )
         plt.show()
