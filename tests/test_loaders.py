@@ -42,6 +42,8 @@ class TestLoadStatsbomb:
         assert len(shots) == 26
         shot = shots[0]
         assert shot.body_part == "left_foot"
+        assert shot.xg is not None
+        assert int(shot.xg * 1000) == 24
 
         pass_ = game.passes()[0]
         assert pass_.result == "success"

@@ -123,6 +123,7 @@ class Shot(Event):
     pattern: ShotPattern
     body_part: BodyPart
     result: ShotResult
+    xg: float | None = None
 
 
 class Pass(Event):

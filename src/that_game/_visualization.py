@@ -168,3 +168,6 @@ class ShotsVisualization:
                 ax=ax,
             )
         plt.show()
+
+    def xg(self) -> None:
+        return

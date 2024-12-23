@@ -207,6 +207,7 @@ class StatsBombLoader:
             pattern=SHOT_PATTERNS[raw_shot["type"]["name"]],
             body_part=BODY_PARTS[raw_shot["body_part"]["name"]],
             result=SHOT_RESULTS[raw_shot["outcome"]["name"]],
+            xg=raw_shot["statsbomb_xg"],
         )
 
     def _parse_pass(self, raw_event: dict[str, Any]) -> Pass:
