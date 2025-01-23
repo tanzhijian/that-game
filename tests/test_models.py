@@ -87,13 +87,6 @@ class TestGame:
         assert int(shot.location.x) == 100
         assert shot.period == "first_half"
 
-    def test_model_dump_pandas(self, game: Game) -> None:
-        df = game.model_dump_pandas()
-        assert df.shape == (1, 34)
-        event = df.iloc[0]
-        assert event["id"] == "0001"
-        assert event["team.name"] == "Arsenal"
-
 
 def test_pitch_eq() -> None:
     pitch1 = Pitch(length=1, width=0.5 + 0.5, height_scale_to_meter=0.1 + 0.2)

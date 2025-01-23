@@ -1,7 +1,6 @@
 from datetime import datetime
 from typing import Any, Literal, Sequence
 
-import pandas as pd
 from pydantic import BaseModel, ConfigDict, Field, computed_field
 
 from ._status import (
@@ -152,16 +151,6 @@ class Game(BaseModel):
     @property
     def kick_off(self) -> str:
         return self.datetime.strftime("%H:%M")
-
-    def model_dump_pandas(
-        self,
-        exclude_none: bool = False,
-        json_normalize: bool = True,
-    ) -> pd.DataFrame:
-        events_dict = self.model_dump(exclude_none=exclude_none)["events"]
-        if json_normalize:
-            return pd.json_normalize(events_dict)
-        return pd.DataFrame(events_dict)
 
     def shots(self) -> list[Shot]:
         return [event for event in self.events if isinstance(event, Shot)]
