@@ -12,8 +12,6 @@
 -e file:.
 annotated-types==0.7.0
     # via pydantic
-appnope==0.1.4
-    # via ipykernel
 asttokens==2.4.1
     # via stack-data
 certifi==2024.7.4
@@ -50,7 +48,7 @@ jupyter-core==5.7.2
     # via jupyter-client
 kiwisolver==1.4.5
     # via matplotlib
-matplotlib==3.9.2
+matplotlib==3.10.1
     # via mplsoccer
     # via seaborn
     # via that-game
@@ -59,7 +57,7 @@ matplotlib-inline==0.1.7
     # via ipython
 mplsoccer==1.4.0
     # via that-game
-mypy==1.12.1
+mypy==1.15.0
 mypy-extensions==1.0.0
     # via mypy
 nest-asyncio==1.6.0
@@ -98,15 +96,15 @@ ptyprocess==0.7.0
     # via pexpect
 pure-eval==0.2.3
     # via stack-data
-pydantic==2.9.2
+pydantic==2.10.6
     # via that-game
-pydantic-core==2.23.4
+pydantic-core==2.27.2
     # via pydantic
 pygments==2.18.0
     # via ipython
 pyparsing==3.1.2
     # via matplotlib
-pytest==8.3.3
+pytest==8.3.5
 python-dateutil==2.9.0.post0
     # via jupyter-client
     # via matplotlib
@@ -118,7 +116,7 @@ pyzmq==26.1.1
     # via jupyter-client
 requests==2.32.3
     # via mplsoccer
-ruff==0.7.0
+ruff==0.9.9
 scipy==1.14.0
     # via mplsoccer
 seaborn==0.13.2
@@ -138,7 +136,7 @@ traitlets==5.14.3
     # via jupyter-client
     # via jupyter-core
     # via matplotlib-inline
-typing-extensions==4.12.1
+typing-extensions==4.12.2
     # via mypy
     # via pydantic
     # via pydantic-core
