@@ -247,7 +247,9 @@ class StatsBombLoader:
         events = []
         for raw_event in self._raw_events:
             # 目前只处理两种事件，射门和传球
-            if (type_ := EVENT_TYPES.get(raw_event["type"]["name"])) is None:
+            try:
+                type_ = EVENT_TYPES[raw_event["type"]["name"]]
+            except KeyError:
                 continue
 
             event: Any
