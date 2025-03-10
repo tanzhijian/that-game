@@ -25,109 +25,99 @@ from .._status import (
 
 def load_statsbomb(
     game_id: str,
-    matches: str,
-    lineups: str,
     events: str,
+    *,
+    matches: str | None = None,
+    lineups: str | None = None,
     three_sixty: str | None = None,
 ) -> Game:
-    loader = StatsBombLoader(game_id, matches, lineups, events, three_sixty)
-    return loader.game
+    loader = StatsBombLoader(
+        game_id,
+        events,
+        matches=matches,
+        lineups=lineups,
+        three_sixty=three_sixty,
+    )
+    return loader.game()
 
 
 class StatsBombLoader:
     def __init__(
         self,
         game_id: str,
-        matches: str,
-        lineups: str,
         events: str,
+        *,
+        matches: str | None = None,
+        lineups: str | None = None,
         three_sixty: str | None = None,
     ) -> None:
         self._game_id = game_id
-
-        self._raw_game = next(
-            game
-            for game in json.loads(matches)
-            if str(game["match_id"]) == self._game_id
-        )
-        self._raw_lineups = json.loads(lineups)
-        self._raw_events = json.loads(events)
-        self._raw_three_sixty = (
-            json.loads(three_sixty) if three_sixty is not None else None
-        )
-
-        self._teams = {
-            (home_team_id := str(self._raw_game["home_team"]["home_team_id"])): Team(
-                id=home_team_id,
-                name=self._raw_game["home_team"]["home_team_name"],
-            ),
-            (away_team_id := str(self._raw_game["away_team"]["away_team_id"])): Team(
-                id=away_team_id,
-                name=self._raw_game["away_team"]["away_team_name"],
-            ),
-        }
-        self._home_players, self._away_players = self._parse_players()
-        self._competition = Competition(
-            id=str(self._raw_game["competition"]["competition_id"]),
-            name=self._raw_game["competition"]["competition_name"],
-        )
+        self._three_sixty = three_sixty
         self._pitch = Pitch(length=120, width=80, width_direction="down")
 
-    def _parse_players(self) -> tuple[dict[str, Player], dict[str, Player]]:
-        p1, p2 = self._raw_lineups[0], self._raw_lineups[1]
-        if str(p1["team_id"]) == next(iter(self._teams)):
-            home, away = p1, p2
-        else:
-            home, away = p2, p1
+        self._game_info = self._find_game_info(matches)
+        self._teams = self._init_teams()
+        self._players = self._init_players(lineups)
+        self._events = self._init_events(events)
 
-        home_players = {
-            str(player["player_id"]): self._parse_player(player)
-            for player in home["lineup"]
-        }
-        away_players = {
-            str(player["player_id"]): self._parse_player(player)
-            for player in away["lineup"]
-        }
-        return home_players, away_players
+    def _find_game_info(self, raw_matches: str | None) -> Any | None:
+        if raw_matches is None:
+            return None
+        for game in json.loads(raw_matches):
+            if str(game["match_id"]) == self._game_id:
+                return game
+        raise ValueError(f"Game {self._game_id} not found")
 
-    def _parse_player(self, player_dict: Any) -> Player:
-        try:
-            position = player_dict["positions"][0]["position"]
-        except IndexError:
-            position = "bench"
-        return Player(
-            id=str(player_dict["player_id"]),
-            name=player_dict["player_name"],
-            position=position,
-            jersey_number=player_dict["jersey_number"],
+    def _init_teams(self) -> dict[str, Team]:
+        if self._game_info is None:
+            return {}
+
+        home_team_id = str(self._game_info["home_team"]["home_team_id"])
+        home_team = Team(
+            id=home_team_id,
+            name=self._game_info["home_team"]["home_team_name"],
         )
+        away_team_id = str(self._game_info["away_team"]["away_team_id"])
+        away_team = Team(
+            id=away_team_id,
+            name=self._game_info["away_team"]["away_team_name"],
+        )
+        return {
+            home_team_id: home_team,
+            away_team_id: away_team,
+        }
 
-    @property
-    def home_team(self) -> Team:
-        return list(self._teams.values())[0]
+    def _init_players(self, raw_lineups: str | None) -> dict[str, tuple[str, Player]]:
+        if raw_lineups is None:
+            return {}
 
-    @property
-    def away_team(self) -> Team:
-        return list(self._teams.values())[1]
+        players: dict[str, tuple[str, Player]] = {}
+        for team in json.loads(raw_lineups):
+            team_id = str(team["team_id"])
+            for player in team["lineup"]:
+                player_id = str(player["player_id"])
 
-    @property
-    def home_players(self) -> list[Player]:
-        return list(self._home_players.values())
+                try:
+                    position = player["positions"][0]["position"]
+                except IndexError:
+                    position = "bench"
 
-    @property
-    def away_players(self) -> list[Player]:
-        return list(self._away_players.values())
+                players[player_id] = (
+                    team_id,
+                    Player(
+                        id=player_id,
+                        name=player["player_name"],
+                        position=position,
+                        jersey_number=player["jersey_number"],
+                    ),
+                )
+        return players
 
-    @property
-    def competition(self) -> Competition:
-        return self._competition
-
-    @property
-    def pitch(self) -> Pitch:
-        return self._pitch
+    def _select_players(self, team_id: str) -> list[Player]:
+        return [player[1] for player in self._players.values() if player[0] == team_id]
 
     def _find_player(self, player_id: str) -> Player:
-        return self._home_players.get(player_id) or self._away_players[player_id]
+        return self._players[player_id][1]
 
     def _transform_timestamp(self, time_str: str) -> float:
         time_obj = datetime.strptime(time_str, "%H:%M:%S.%f")
@@ -242,10 +232,28 @@ class StatsBombLoader:
             pattern=PASS_PATTERNS[raw_pass["height"]["name"]],
         )
 
-    @property
-    def events(self) -> list[Any]:
+    def _init_events(self, raw_events: str) -> list[Any]:
         events = []
-        for raw_event in self._raw_events:
+        for raw_event in json.loads(raw_events):
+            team = raw_event["team"]
+            if (team_id := str(team["id"])) not in self._teams:
+                self._teams[team_id] = Team(id=team_id, name=team["name"])
+
+            try:
+                player = raw_event["player"]
+                if (player_id := str(player["id"])) not in self._players:
+                    position = raw_event["position"]["name"]
+                    self._players[player_id] = (
+                        team_id,
+                        Player(
+                            id=player_id,
+                            name=player["name"],
+                            position=position,
+                        ),
+                    )
+            except KeyError:
+                pass
+
             # 目前只处理两种事件，射门和传球
             try:
                 type_ = EVENT_TYPES[raw_event["type"]["name"]]
@@ -265,16 +273,47 @@ class StatsBombLoader:
         return events
 
     @property
+    def pitch(self) -> Pitch:
+        return self._pitch
+
+    def datetime(self) -> str | None:
+        if self._game_info is None:
+            return None
+        return f"{self._game_info['match_date']} {self._game_info['kick_off']}"
+
+    def competition(self) -> Competition | None:
+        if self._game_info is None:
+            return None
+        return Competition(
+            id=str(self._game_info["competition"]["competition_id"]),
+            name=self._game_info["competition"]["competition_name"],
+        )
+
+    def home_team(self) -> Team:
+        return list(self._teams.values())[0]
+
+    def away_team(self) -> Team:
+        return list(self._teams.values())[1]
+
+    def home_players(self) -> list[Player]:
+        return self._select_players(self.home_team().id)
+
+    def away_players(self) -> list[Player]:
+        return self._select_players(self.away_team().id)
+
+    def events(self) -> list[Any]:
+        return self._events
+
     def game(self) -> Game:
         return Game(
             id=self._game_id,
-            datetime=f"{self._raw_game['match_date']} {self._raw_game['kick_off']}",
-            home_team=self.home_team,
-            away_team=self.away_team,
-            home_players=self.home_players,
-            away_players=self.away_players,
-            competition=self.competition,
-            events=self.events,
+            datetime=self.datetime(),
+            competition=self.competition(),
+            home_team=self.home_team(),
+            away_team=self.away_team(),
+            home_players=self.home_players(),
+            away_players=self.away_players(),
+            events=self.events(),
         )
 
 
