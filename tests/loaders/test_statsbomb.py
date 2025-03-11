@@ -28,37 +28,44 @@ class TestStatsBombLoaderAllParams:
         assert int(loader.pitch.length) == 120
 
     def test_datetime(self, loader: StatsBombLoader) -> None:
-        assert loader.datetime() == "2024-05-05 18:30:00.000"
+        assert loader.datetime == "2024-05-05 18:30:00.000"
 
     def test_competition(self, loader: StatsBombLoader) -> None:
-        competition = loader.competition()
+        competition = loader.competition
         assert competition is not None
         assert competition.id == "9"
         assert competition.name == "1. Bundesliga"
 
     def test_home_team(self, loader: StatsBombLoader) -> None:
-        team = loader.home_team()
+        team = loader.home_team
         assert team.id == "184"
         assert team.name == "Eintracht Frankfurt"
 
     def test_away_team(self, loader: StatsBombLoader) -> None:
-        team = loader.away_team()
+        team = loader.away_team
         assert team.id == "904"
         assert team.name == "Bayer Leverkusen"
 
-    def test_players(self, loader: StatsBombLoader) -> None:
-        players = loader.players()
+    def test_home_players(self, loader: StatsBombLoader) -> None:
+        players = loader.home_players
+        assert len(players) > 0
+        player = players[0]
+        assert player.name == "Ellyes Joris Skhiri"
+        assert player.jersey_number == 15
+
+    def test_away_players(self, loader: StatsBombLoader) -> None:
+        players = loader.away_players
         assert len(players) > 0
         player = players[0]
         assert player.name == "Granit Xhaka"
         assert player.jersey_number == 34
 
     def test_events(self, loader: StatsBombLoader) -> None:
-        events = loader.events()
+        events = loader.events
         assert len(events) > 0
 
     def test_shots(self, loader: StatsBombLoader) -> None:
-        shots = loader.shots()
+        shots = loader.get_shots()
         assert len(shots) == 26
         shot = shots[0]
         assert shot.body_part == "left_foot"
@@ -75,7 +82,7 @@ class TestStatsBombLoaderAllParams:
         assert related_player.player.name == "Patrik Schick"
 
     def test_passes(self, loader: StatsBombLoader) -> None:
-        passes = loader.passes()
+        passes = loader.get_passes()
         assert len(passes) > 0
         pass_ = passes[0]
         assert pass_.result == "success"
@@ -93,23 +100,30 @@ class TestStatsBombLoaderOnlyEvents:
             return StatsBombLoader(game_id, events.read())
 
     def test_datetime(self, loader: StatsBombLoader) -> None:
-        assert loader.datetime() is None
+        assert loader.datetime is None
 
     def test_competition(self, loader: StatsBombLoader) -> None:
-        assert loader.competition() is None
+        assert loader.competition is None
 
     def test_home_team(self, loader: StatsBombLoader) -> None:
-        team = loader.home_team()
+        team = loader.home_team
         assert team.id == "184"
         assert team.name == "Eintracht Frankfurt"
 
     def test_away_team(self, loader: StatsBombLoader) -> None:
-        team = loader.away_team()
+        team = loader.away_team
         assert team.id == "904"
         assert team.name == "Bayer Leverkusen"
 
-    def test_players(self, loader: StatsBombLoader) -> None:
-        players = loader.players()
+    def test_home_players(self, loader: StatsBombLoader) -> None:
+        players = loader.home_players
+        assert len(players) > 0
+        player = players[0]
+        assert player.name == "Lucas Silva Melo"
+        assert player.jersey_number is None
+
+    def test_away_players(self, loader: StatsBombLoader) -> None:
+        players = loader.away_players
         assert len(players) > 0
         player = players[0]
         assert player.name == "Jonas Hofmann"

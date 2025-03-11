@@ -38,7 +38,7 @@ def load_statsbomb(
         lineups=lineups,
         three_sixty=three_sixty,
     )
-    return loader.game()
+    return loader.create_game()
 
 
 class StatsBombLoader:
@@ -276,11 +276,13 @@ class StatsBombLoader:
     def pitch(self) -> Pitch:
         return self._pitch
 
+    @property
     def datetime(self) -> str | None:
         if self._game_info is None:
             return None
         return f"{self._game_info['match_date']} {self._game_info['kick_off']}"
 
+    @property
     def competition(self) -> Competition | None:
         if self._game_info is None:
             return None
@@ -289,40 +291,42 @@ class StatsBombLoader:
             name=self._game_info["competition"]["competition_name"],
         )
 
+    @property
     def home_team(self) -> Team:
         return list(self._teams.values())[0]
 
+    @property
     def away_team(self) -> Team:
         return list(self._teams.values())[1]
 
+    @property
     def home_players(self) -> list[Player]:
-        return self._select_players(self.home_team().id)
+        return self._select_players(self.home_team.id)
 
+    @property
     def away_players(self) -> list[Player]:
-        return self._select_players(self.away_team().id)
+        return self._select_players(self.away_team.id)
 
-    def players(self) -> list[Player]:
-        return [player[1] for player in self._players.values()]
-
+    @property
     def events(self) -> list[Any]:
         return self._events
 
-    def shots(self) -> list[Shot]:
-        return [event for event in self.events() if isinstance(event, Shot)]
+    def get_shots(self) -> list[Shot]:
+        return [event for event in self.events if isinstance(event, Shot)]
 
-    def passes(self) -> list[Pass]:
-        return [event for event in self.events() if isinstance(event, Pass)]
+    def get_passes(self) -> list[Pass]:
+        return [event for event in self.events if isinstance(event, Pass)]
 
-    def game(self) -> Game:
+    def create_game(self) -> Game:
         return Game(
             id=self._game_id,
-            datetime=self.datetime(),
-            competition=self.competition(),
-            home_team=self.home_team(),
-            away_team=self.away_team(),
-            home_players=self.home_players(),
-            away_players=self.away_players(),
-            events=self.events(),
+            datetime=self.datetime,
+            competition=self.competition,
+            home_team=self.home_team,
+            away_team=self.away_team,
+            home_players=self.home_players,
+            away_players=self.away_players,
+            events=self.events,
         )
 
 
