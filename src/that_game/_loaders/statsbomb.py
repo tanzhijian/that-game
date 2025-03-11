@@ -301,8 +301,17 @@ class StatsBombLoader:
     def away_players(self) -> list[Player]:
         return self._select_players(self.away_team().id)
 
+    def players(self) -> list[Player]:
+        return [player[1] for player in self._players.values()]
+
     def events(self) -> list[Any]:
         return self._events
+
+    def shots(self) -> list[Shot]:
+        return [event for event in self.events() if isinstance(event, Shot)]
+
+    def passes(self) -> list[Pass]:
+        return [event for event in self.events() if isinstance(event, Pass)]
 
     def game(self) -> Game:
         return Game(
