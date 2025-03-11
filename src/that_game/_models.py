@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime as datetimelib
 from typing import Any, Literal, Sequence
 
 from pydantic import BaseModel, ConfigDict, Field, computed_field
@@ -134,23 +134,20 @@ class Pass(Event):
 
 class Game(BaseModel):
     id: str
-    datetime: datetime
+    datetime: datetimelib | None = None
+    competition: Competition | None = None
     home_team: Team
     away_team: Team
     home_players: Sequence[Player]
     away_players: Sequence[Player]
-    competition: Competition
     events: Sequence[Any]
 
     @computed_field  # type: ignore
     @property
-    def date(self) -> str:
+    def date(self) -> str | None:
+        if self.datetime is None:
+            return None
         return self.datetime.strftime("%Y-%m-%d")
-
-    @computed_field  # type: ignore
-    @property
-    def kick_off(self) -> str:
-        return self.datetime.strftime("%H:%M")
 
     def shots(self) -> list[Shot]:
         return [event for event in self.events if isinstance(event, Shot)]

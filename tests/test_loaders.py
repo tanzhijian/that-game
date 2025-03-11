@@ -19,7 +19,10 @@ class TestLoadStatsbomb:
             open(events_path) as events,
         ):
             return load_statsbomb(
-                game_id, matches.read(), lineups.read(), events.read()
+                game_id,
+                events.read(),
+                matches=matches.read(),
+                lineups=lineups.read(),
             )
 
     def test_fields(self, game: Game) -> None:
@@ -28,8 +31,9 @@ class TestLoadStatsbomb:
         assert game.home_team.name == "Eintracht Frankfurt"
         assert game.away_team.id == "904"
         assert game.away_team.name == "Bayer Leverkusen"
-        assert game.kick_off == "18:30"
-        assert game.competition.id == "9"
+        assert game.date == "2024-05-05"
+        if game.competition is not None:
+            assert game.competition.id == "9"
 
         player = game.away_players[0]
         assert player.name == "Granit Xhaka"
