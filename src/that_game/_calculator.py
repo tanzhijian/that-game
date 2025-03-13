@@ -1,7 +1,7 @@
 from typing import Sequence
 
 import numpy as np
-import pandas as pd
+import numpy.typing as npt
 
 from ._models import Shot
 
@@ -12,61 +12,73 @@ class BaseXG:
     def __init__(self, shots: Sequence[Shot]) -> None:
         self._shots = shots
 
-    @property
-    def _x(self) -> pd.Series:
         xs = []
-        ids = []
-        length = self._shots[0].location.pitch.length
-        for shot in self._shots:
-            xs.append(length - shot.location.x)
-            ids.append(shot.id)
-        return pd.Series(xs, index=ids, name="x")
-
-    @property
-    def _y(self) -> pd.Series:
         ys = []
-        ids = []
-        for shot in self._shots:
+        labels = []
+        for shot in shots:
+            xs.append(shot.location.x)
             ys.append(shot.location.y)
-            ids.append(shot.id)
-        return pd.Series(ys, index=ids, name="y")
+            labels.append(shot.result == "goal")
+        self._x: npt.NDArray[np.float64] = np.array(xs)
+        self._y: npt.NDArray[np.float64] = np.array(ys)
+        self._label: npt.NDArray[np.bool_] = np.array(labels)
 
     @property
-    def _c(self) -> pd.Series:
+    def _cal_x(self) -> npt.NDArray[np.float64]:
+        length = self._shots[0].location.pitch.length
+        return length - self._x
+
+    @property
+    def _cal_c(self) -> npt.NDArray[np.float64]:
         width = self._shots[0].location.pitch.width
-        c = abs(width / 2 - self._y)
-        c.name = "c"
-        return c
+        return np.abs(width / 2 - self._y)
 
-    def distance(self) -> pd.Series:
-        distance = np.sqrt(self._x**2 + self._c**2)
-        distance.name = "distance"
-        return distance
+    @property
+    def x(self) -> npt.NDArray[np.float64]:
+        return self._x
 
-    def angle(self) -> pd.Series:
+    @property
+    def y(self) -> npt.NDArray[np.float64]:
+        return self._y
+
+    @property
+    def distance(self) -> npt.NDArray[np.float64]:
+        return np.sqrt(self._cal_x**2 + self._cal_c**2)
+
+    @property
+    def angle(self) -> npt.NDArray[np.float64]:
         angle = (
             np.where(
-                np.arctan(7.32 * self._x / (self._x**2 + self._c**2 - (7.32 / 2) ** 2))
+                np.arctan(
+                    7.32
+                    * self._cal_x
+                    / (self._cal_x**2 + self._cal_c**2 - (7.32 / 2) ** 2)
+                )
                 >= 0,
-                np.arctan(7.32 * self._x / (self._x**2 + self._c**2 - (7.32 / 2) ** 2)),
-                np.arctan(7.32 * self._x / (self._x**2 + self._c**2 - (7.32 / 2) ** 2))
+                np.arctan(
+                    7.32
+                    * self._cal_x
+                    / (self._cal_x**2 + self._cal_c**2 - (7.32 / 2) ** 2)
+                ),
+                np.arctan(
+                    7.32
+                    * self._cal_x
+                    / (self._cal_x**2 + self._cal_c**2 - (7.32 / 2) ** 2)
+                )
                 + np.pi,
             )
             * 180
             / np.pi
         )
-        return pd.Series(angle, index=self._x.index, name="angle")
+        return angle
 
-    def features(self) -> pd.DataFrame:
-        return pd.concat([self.distance(), self.angle()], axis=1)
+    @property
+    def features(self) -> npt.NDArray[np.float64]:
+        return np.column_stack((self.distance, self.angle))
 
-    def label(self) -> pd.Series:
-        goals = []
-        ids = []
-        for shot in self._shots:
-            goals.append(shot.result == "goal")
-            ids.append(shot.id)
-        return pd.Series(goals, index=ids, name="goal")
+    @property
+    def label(self) -> npt.NDArray[np.bool_]:
+        return self._label
 
 
 class XG(BaseXG):
