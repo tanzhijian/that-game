@@ -1,5 +1,6 @@
 from typing import Sequence
 
+import numpy as np
 import pandas as pd
 
 from ._models import Shot
@@ -15,8 +16,9 @@ class BaseXG:
     def _x(self) -> pd.Series:
         xs = []
         ids = []
+        length = self._shots[0].location.pitch.length
         for shot in self._shots:
-            xs.append(shot.location.x)
+            xs.append(length - shot.location.x)
             ids.append(shot.id)
         return pd.Series(xs, index=ids, name="x")
 
@@ -32,21 +34,39 @@ class BaseXG:
     @property
     def _c(self) -> pd.Series:
         width = self._shots[0].location.pitch.width
-        c = abs(width - self._y)
+        c = abs(width / 2 - self._y)
         c.name = "c"
         return c
 
     def distance(self) -> pd.Series:
-        pass
+        distance = np.sqrt(self._x**2 + self._c**2)
+        distance.name = "distance"
+        return distance
 
     def angle(self) -> pd.Series:
-        pass
+        angle = (
+            np.where(
+                np.arctan(7.32 * self._x / (self._x**2 + self._c**2 - (7.32 / 2) ** 2))
+                >= 0,
+                np.arctan(7.32 * self._x / (self._x**2 + self._c**2 - (7.32 / 2) ** 2)),
+                np.arctan(7.32 * self._x / (self._x**2 + self._c**2 - (7.32 / 2) ** 2))
+                + np.pi,
+            )
+            * 180
+            / np.pi
+        )
+        return pd.Series(angle, index=self._x.index, name="angle")
 
     def features(self) -> pd.DataFrame:
-        pass
+        return pd.concat([self.distance(), self.angle()], axis=1)
 
     def label(self) -> pd.Series:
-        pass
+        goals = []
+        ids = []
+        for shot in self._shots:
+            goals.append(shot.result == "goal")
+            ids.append(shot.id)
+        return pd.Series(goals, index=ids, name="goal")
 
 
 class XG(BaseXG):
