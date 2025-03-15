@@ -1,12 +1,15 @@
+from pathlib import Path
 from typing import Sequence
 
+import joblib
 import numpy as np
 import numpy.typing as npt
+from sklearn.linear_model import LogisticRegression
 
 from ._models import Shot
 
 
-class BaseXG:
+class BaseXGInput:
     """Only distance and angle"""
 
     def __init__(self, shots: Sequence[Shot]) -> None:
@@ -81,7 +84,7 @@ class BaseXG:
         return self._label
 
 
-class XG(BaseXG):
+class XGInput(BaseXGInput):
     """Include:
 
     * shot type: One of open play, free kick (if within 10 seconds of a free kick),
@@ -114,3 +117,31 @@ class XG(BaseXG):
 
     def __init__(self, shots: Sequence[Shot]) -> None:
         super().__init__(shots)
+
+
+class XGModel:
+    def __init__(self) -> None:
+        self._model: LogisticRegression | None = None
+
+    def load(self, path: Path) -> None:
+        self._model = joblib.load(path)
+
+    def save(self, path: Path) -> None:
+        if self._model is None:
+            raise ValueError("Model is not trained or loaded yet.")
+        joblib.dump(self._model, path)
+
+    def train(self, xg_input: BaseXGInput) -> None:
+        if self._model is not None:
+            raise ValueError("Model is already trained.")
+        self._model = LogisticRegression()
+        self._model.fit(xg_input.features, xg_input.label)
+
+    def predict(self, xg_input: BaseXGInput) -> npt.NDArray[np.float64]:
+        if self._model is None:
+            raise ValueError("Model is not trained or loaded yet.")
+        return self._model.predict_proba(xg_input.features)[:, 1]
+    
+    def calculate_xg(self, shot: Shot) -> Shot:
+        shot.xg = self.predict(BaseXGInput([shot]))[0]
+        return shot

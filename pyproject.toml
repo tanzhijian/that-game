@@ -10,6 +10,7 @@ dependencies = [
     "pydantic>=2.10.6",
     "matplotlib>=3.10.1",
     "mplsoccer>=1.4.0",
+    "scikit-learn>=1.6.1",
 ]
 readme = "README.md"
 requires-python = ">= 3.10"

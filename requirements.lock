@@ -24,6 +24,8 @@ fonttools==4.53.1
     # via matplotlib
 idna==3.7
     # via requests
+joblib==1.4.2
+    # via scikit-learn
 kiwisolver==1.4.5
     # via matplotlib
 matplotlib==3.10.1
@@ -37,6 +39,7 @@ numpy==1.26.4
     # via matplotlib
     # via mplsoccer
     # via pandas
+    # via scikit-learn
     # via scipy
     # via seaborn
 packaging==24.1
@@ -61,12 +64,17 @@ pytz==2024.1
     # via pandas
 requests==2.32.3
     # via mplsoccer
+scikit-learn==1.6.1
+    # via that-game
 scipy==1.14.0
     # via mplsoccer
+    # via scikit-learn
 seaborn==0.13.2
     # via mplsoccer
 six==1.16.0
     # via python-dateutil
+threadpoolctl==3.6.0
+    # via scikit-learn
 typing-extensions==4.12.2
     # via pydantic
     # via pydantic-core
