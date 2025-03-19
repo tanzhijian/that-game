@@ -34,7 +34,8 @@ class BaseXGInput:
     @property
     def _cal_c(self) -> npt.NDArray[np.float64]:
         width = self._shots[0].location.pitch.width
-        return np.abs(width / 2 - self._y)
+        c: npt.NDArray[np.float64] = np.abs(width / 2 - self._y)
+        return c
 
     @property
     def x(self) -> npt.NDArray[np.float64]:
@@ -140,8 +141,11 @@ class XGModel:
     def predict(self, xg_input: BaseXGInput) -> npt.NDArray[np.float64]:
         if self._model is None:
             raise ValueError("Model is not trained or loaded yet.")
-        return self._model.predict_proba(xg_input.features)[:, 1]
-    
+        results: npt.NDArray[np.float64] = self._model.predict_proba(xg_input.features)[
+            :, 1
+        ]
+        return results
+
     def calculate_xg(self, shot: Shot) -> Shot:
         shot.xg = self.predict(BaseXGInput([shot]))[0]
         return shot
