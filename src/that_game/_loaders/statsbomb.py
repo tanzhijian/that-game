@@ -42,6 +42,13 @@ def load_statsbomb(
 
 
 class StatsBombLoader:
+    _pitch = Pitch(
+            length=120,
+            width=80,
+            width_direction="down",
+            goal_width=8,
+            goal_height=2.67,
+        )
     def __init__(
         self,
         game_id: str,
@@ -53,7 +60,6 @@ class StatsBombLoader:
     ) -> None:
         self._game_id = game_id
         self._three_sixty = three_sixty
-        self._pitch = Pitch(length=120, width=80, width_direction="down")
 
         self._game_info = self._find_game_info(matches)
         self._teams = self._init_teams()

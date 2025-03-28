@@ -38,6 +38,11 @@ class BaseXGInput:
         return c
 
     @property
+    def _goal_width(self) -> float:
+        pitch = self._shots[0].location.pitch
+        return pitch.goal_width
+
+    @property
     def x(self) -> npt.NDArray[np.float64]:
         return self._x
 
@@ -54,20 +59,20 @@ class BaseXGInput:
         angle = (
             np.where(
                 np.arctan(
-                    7.32
+                    self._goal_width
                     * self._cal_x
-                    / (self._cal_x**2 + self._cal_c**2 - (7.32 / 2) ** 2)
+                    / (self._cal_x**2 + self._cal_c**2 - (self._goal_width / 2) ** 2)
                 )
                 >= 0,
                 np.arctan(
-                    7.32
+                    self._goal_width
                     * self._cal_x
-                    / (self._cal_x**2 + self._cal_c**2 - (7.32 / 2) ** 2)
+                    / (self._cal_x**2 + self._cal_c**2 - (self._goal_width / 2) ** 2)
                 ),
                 np.arctan(
-                    7.32
+                    self._goal_width
                     * self._cal_x
-                    / (self._cal_x**2 + self._cal_c**2 - (7.32 / 2) ** 2)
+                    / (self._cal_x**2 + self._cal_c**2 - (self._goal_width / 2) ** 2)
                 )
                 + np.pi,
             )

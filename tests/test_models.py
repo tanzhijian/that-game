@@ -92,6 +92,11 @@ def test_pitch_eq() -> None:
     pitch2 = Pitch(length=1, width=1, height_scale_to_meter=0.3)
     assert pitch1 == pitch2
 
+def test_pitch_goal() -> None:
+    pitch = Pitch()
+    assert int(pitch.goal_width * 100) == 732
+    assert int(pitch.goal_height * 100) == 244
+
 
 class TestLocation:
     @pytest.fixture

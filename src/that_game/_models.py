@@ -36,12 +36,14 @@ class Team(BaseModel):
 class Pitch(BaseModel):
     model_config = ConfigDict(frozen=True)
 
-    length: float
-    width: float
+    length: float = 105
+    width: float = 68
     length_direction: Literal["left", "right"] = "right"
     width_direction: Literal["up", "down"] = "up"
     vertical: bool = False
     height_scale_to_meter: float = Field(default=1.0, gt=0)
+    goal_width: float = 7.32
+    goal_height: float = 2.44
 
     def __eq__(self, other: object) -> bool:
         """重写等于方法，以支持浮点数的容差比较。"""
