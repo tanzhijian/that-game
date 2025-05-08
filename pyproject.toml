@@ -1,15 +1,13 @@
 [project]
 name = "that-game"
-version = "0.0.1.13"
+version = "0.0.1.14"
 description = "Add your description here"
 authors = [
     { name = "tanzhijian", email = "tanzhijianorg@outlook.com" }
 ]
 dependencies = [
-    "pandas>=2.2.3",
-    "pydantic>=2.10.6",
-    "matplotlib>=3.10.1",
-    "mplsoccer>=1.4.0",
+    "pydantic>=2.11.4",
+    "numpy>=2.2.5",
     "scikit-learn>=1.6.1",
 ]
 readme = "README.md"
@@ -22,10 +20,11 @@ build-backend = "hatchling.build"
 [tool.rye]
 managed = true
 dev-dependencies = [
-    "ruff>=0.9.9",
+    "ruff>=0.11.8",
     "mypy>=1.15.0",
     "pytest>=8.3.5",
     "ipykernel>=6.29.5",
+    "polars>=1.29.0",
 ]
 
 [tool.hatch.metadata]
