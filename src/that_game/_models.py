@@ -1,7 +1,6 @@
-from datetime import datetime as datetimelib
-from typing import Any, Literal, Sequence
+from typing import Literal, Sequence
 
-from pydantic import BaseModel, ConfigDict, Field, computed_field
+from pydantic import BaseModel, ConfigDict, Field
 
 from ._status import (
     BodyPart,
@@ -134,22 +133,27 @@ class Pass(Event):
     pattern: PassPattern
 
 
-class Game(BaseModel):
-    id: str
-    datetime: datetimelib | None = None
-    competition: Competition | None = None
-    home_team: Team
-    away_team: Team
-    home_players: Sequence[Player]
-    away_players: Sequence[Player]
-    events: Sequence[Any]
-
-    @computed_field  # type: ignore
-    @property
-    def date(self) -> str | None:
-        if self.datetime is None:
-            return None
-        return self.datetime.strftime("%Y-%m-%d")
+class Game:
+    def __init__(
+        self,
+        id: str,
+        events: Sequence[Event],
+        *,
+        competition: Competition | None = None,
+        home_team: Team | None = None,
+        away_team: Team | None = None,
+        home_players: Sequence[Player] | None = None,
+        away_players: Sequence[Player] | None = None,
+        datetime: str | None = None,
+    ) -> None:
+        self.id = id
+        self.events = events
+        self.competition = competition
+        self.home_team = home_team
+        self.away_team = away_team
+        self.home_players = home_players
+        self.away_players = away_players
+        self.datetime = datetime
 
     def shots(self) -> list[Shot]:
         return [event for event in self.events if isinstance(event, Shot)]
