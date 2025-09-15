@@ -1,4 +1,4 @@
-from abc import ABC
+from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import ClassVar, Generic, Self, TypeVar
 
@@ -131,7 +131,7 @@ class Records(Generic[R]):
         row = self.df.sample(n=1).to_dicts()
         return self._model(**row[0])
 
-    def __add__(self, other: object) -> Self:
+    def __add__(self, other: Self) -> Self:
         if type(other) is not type(self):
             raise TypeError(
                 "Can only add Records with another Records instance"
@@ -151,20 +151,27 @@ class BaseEvents(Records[E], Generic[E], ABC):
         super().__init__(df, model)
         self._pitch = pitch
 
-    def __add__(self, other: object) -> Self:
-        if not isinstance(other, BaseEvents):
+    def _ensure_compatible(self, obj: Self) -> Self:
+        if type(obj) is not type(self):
             raise TypeError(
-                "Can only add BaseEvents with another BaseEvents instance"
+                (
+                    f"Can only add {type(self).__name__} with another "
+                    f"{type(self).__name__} instance"
+                )
             )
-        if self._model != other.model:
+        if self._model != obj.model:
             raise ValueError("Cannot add with different models")
-        if self._pitch != other.pitch:
+        if self._pitch != obj.pitch:
             raise ValueError("Cannot add with different pitches")
-        return type(self)(
-            pl.concat([self.df, other.df], how="vertical"),
-            self._model,
-            self._pitch,
-        )
+        return obj
+
+    @abstractmethod
+    def _add(self, other: Self) -> Self:
+        raise NotImplementedError
+
+    def __add__(self, other: Self) -> Self:
+        other = self._ensure_compatible(other)
+        return self._add(other)
 
     @property
     def pitch(self) -> Pitch:
@@ -197,3 +204,8 @@ class Events(BaseEvents[Event]):
     def __init__(self, df: pl.DataFrame, pitch: Pitch) -> None:
         self._model = Event
         super().__init__(df, self._model, pitch)
+
+    def _add(self, other: "Events") -> "Events":
+        return Events(
+            pl.concat([self.df, other.df], how="vertical"), self._pitch
+        )
