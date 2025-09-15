@@ -1,12 +1,22 @@
 import types
-from dataclasses import fields
-from typing import Annotated, Any, Union, get_args, get_origin, get_type_hints
+from dataclasses import Field, asdict, fields
+from typing import (
+    Annotated,
+    Any,
+    ClassVar,
+    Protocol,
+    Sequence,
+    Union,
+    get_args,
+    get_origin,
+    get_type_hints,
+)
 
 import polars as pl
 
 _TYPES_MAP: dict[type, type[pl.DataType]] = {
     str: pl.String,
-    int: pl.Int32,
+    int: pl.Int64,
     float: pl.Float64,
     bool: pl.Boolean,
 }
@@ -53,14 +63,13 @@ def transform_schema(data_class: type) -> dict[str, type[pl.DataType]]:
         for f in fields(data_class)
     }
     if hasattr(data_class, "custom_pl_schema"):
-        pl_schema = _update_schema(
-            pl_schema, data_class.custom_pl_schema
-        )
+        pl_schema = _update_schema(pl_schema, data_class.custom_pl_schema)
     return pl_schema
 
 
 def validate_schema(
-    validate_df: pl.DataFrame, required_schema: dict[str, type[pl.DataType]],
+    validate_df: pl.DataFrame,
+    required_schema: dict[str, type[pl.DataType]],
 ) -> None:
     validate_schema = validate_df.schema
     for key, value in required_schema.items():
@@ -71,3 +80,24 @@ def validate_schema(
                 f"Column '{key}' has incorrect type: "
                 f"expected {value}, got {validate_schema[key]}"
             )
+
+
+class DataclassInstance(Protocol):
+    __dataclass_fields__: ClassVar[dict[str, Field[Any]]]
+
+
+def dataclass_instances_to_df(
+    instances: Sequence[DataclassInstance],
+) -> pl.DataFrame:
+    if not instances:
+        raise ValueError(
+            "instances must be a non-empty sequence of dataclass instances"
+        )
+    type_ = type(instances[0])
+    data: list[dict[str, Any]] = []
+    for instance in instances:
+        if type(instance) is not type_:
+            raise TypeError("All instances must be of the same dataclass type")
+        data.append(asdict(instance))
+    schema = transform_schema(type_)
+    return pl.DataFrame(data, schema=schema)

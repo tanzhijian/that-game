@@ -13,6 +13,7 @@ from that_game import (
     Records,
     Shot,
     Shots,
+    dataclass_instances_to_df,
 )
 
 
@@ -63,17 +64,7 @@ class TestRecords:
 class TestEvents:
     @pytest.fixture(scope="class")
     def df(self, event_1: Event, event_2: Event) -> pl.DataFrame:
-        df = pl.DataFrame([asdict(event_1), asdict(event_2)])
-        df = df.with_columns(
-            [
-                pl.col("game_id").cast(pl.Categorical),
-                pl.col("team_id").cast(pl.Categorical),
-                pl.col("player_id").cast(pl.Categorical),
-                pl.col("type_").cast(pl.Categorical),
-                pl.col("part").cast(pl.Int32),
-            ]
-        )
-        return df
+        return dataclass_instances_to_df([event_1, event_2])
 
     @pytest.fixture(scope="class")
     def events(self, df: pl.DataFrame) -> Events:
@@ -102,20 +93,10 @@ class TestEvents:
 class TestShots:
     @pytest.fixture(scope="class")
     def df(self, shot_1: Shot, shot_2: Shot) -> pl.DataFrame:
-        df = pl.DataFrame([asdict(shot_1), asdict(shot_2)])
-        df = df.with_columns(
-            [
-                pl.col("game_id").cast(pl.Categorical),
-                pl.col("team_id").cast(pl.Categorical),
-                pl.col("player_id").cast(pl.Categorical),
-                pl.col("type_").cast(pl.Categorical),
-                pl.col("part").cast(pl.Int32),
-            ]
-        )
-        return df
+        return dataclass_instances_to_df([shot_1, shot_2])
 
     @pytest.fixture(scope="class")
-    def Shots(self, df: pl.DataFrame) -> Shots:
+    def shots(self, df: pl.DataFrame) -> Shots:
         pitch = Pitch(length=120, width=80)
         shots_df = df.filter(pl.col("type_") == "shot")
         shots = Shots(shots_df, pitch)
@@ -125,17 +106,7 @@ class TestShots:
 class TestPart:
     @pytest.fixture(scope="class")
     def df(self, event_1: Event, event_2: Event) -> pl.DataFrame:
-        df = pl.DataFrame([asdict(event_1), asdict(event_2)])
-        df = df.with_columns(
-            [
-                pl.col("game_id").cast(pl.Categorical),
-                pl.col("team_id").cast(pl.Categorical),
-                pl.col("player_id").cast(pl.Categorical),
-                pl.col("type_").cast(pl.Categorical),
-                pl.col("part").cast(pl.Int32),
-            ]
-        )
-        return df
+        return dataclass_instances_to_df([event_1, event_2])
 
     @pytest.fixture(scope="class")
     def part(self, df: pl.DataFrame) -> Part:

@@ -13,6 +13,7 @@ from ._models import (
     Shots,
     Team,
 )
+from ._utils import dataclass_instances_to_df
 
 __all__ = (
     "Competition",
@@ -28,4 +29,5 @@ __all__ = (
     "Shot",
     "Shots",
     "Team",
+    "dataclass_instances_to_df",
 )
