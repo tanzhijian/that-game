@@ -192,7 +192,65 @@ class BaseEvents(Records[E], Generic[E], ABC):
     def filter_by_type(self, type_: str) -> pl.DataFrame:
         return self.df.filter(pl.col("type_") == type_)
 
+    def find_next(self, event_id: str) -> E | None:
+        raise NotImplementedError
+
+    def find_prev(self, event_id: str) -> E | None:
+        raise NotImplementedError
+
     def transform_locations(self, pitch: Pitch) -> None:
+        raise NotImplementedError
+
+
+class Part(BaseEvents[Event]):
+    def __init__(self, df: pl.DataFrame, pitch: Pitch) -> None:
+        self._model = Event
+        super().__init__(df, self._model, pitch)
+
+    def _validate(self, df: pl.DataFrame) -> None:
+        super()._validate(df)
+        parts = df["part"].unique()
+        if len(parts) != 1:
+            raise ValueError(
+                "DataFrame must contain events from a single part"
+            )
+
+    def _concat_with(self, other: "Part") -> "Part":
+        return Part(
+            pl.concat([self.df, other.df], how="vertical"), self._pitch
+        )
+
+
+class Shots(BaseEvents[Shot]):
+    def __init__(self, df: pl.DataFrame, pitch: Pitch) -> None:
+        self._model = Shot
+        super().__init__(df, self._model, pitch)
+
+    def _concat_with(self, other: "Shots") -> "Shots":
+        return Shots(
+            pl.concat([self.df, other.df], how="vertical"), self._pitch
+        )
+
+    def _validate(self, df: pl.DataFrame) -> None:
+        super()._validate(df)
+        if not all(df["type_"] == "shot"):
+            raise ValueError("All events must be of type 'shot'")
+
+    @property
+    def end_xs(self) -> list[float]:
+        raise NotImplementedError
+
+    @property
+    def end_ys(self) -> list[float]:
+        raise NotImplementedError
+
+    def get_xg_features(self) -> pl.DataFrame:
+        raise NotImplementedError
+
+    def get_xg_label(self) -> pl.DataFrame:
+        raise NotImplementedError
+
+    def filter_goals(self) -> "Shots":
         raise NotImplementedError
 
 
@@ -205,3 +263,12 @@ class Events(BaseEvents[Event]):
         return Events(
             pl.concat([self.df, other.df], how="vertical"), self._pitch
         )
+
+    def sample_part(self) -> Part:
+        part_number = (
+            self.df.select(pl.col("part").unique())
+            .sample(n=1)
+            .to_dicts()[0]["part"]
+        )
+        part_df = self.df.filter(pl.col("part") == part_number)
+        return Part(part_df, self._pitch)

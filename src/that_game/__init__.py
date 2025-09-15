@@ -4,22 +4,28 @@ from ._models import (
     Events,
     Frame,
     GameInfo,
+    Part,
     Pitch,
     Player,
     Record,
     Records,
+    Shot,
+    Shots,
     Team,
 )
 
-__all__ = [
-    "Pitch",
-    "Record",
+__all__ = (
     "Competition",
-    "Team",
-    "Player",
-    "GameInfo",
     "Event",
     "Events",
-    "Records",
     "Frame",
-]
+    "GameInfo",
+    "Part",
+    "Pitch",
+    "Player",
+    "Record",
+    "Records",
+    "Shot",
+    "Shots",
+    "Team",
+)

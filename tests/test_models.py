@@ -7,22 +7,18 @@ from that_game import (
     Competition,
     Event,
     Events,
+    Part,
     Pitch,
     Record,
     Records,
+    Shot,
+    Shots,
 )
 
 
 class TestRecords:
     @pytest.fixture(scope="class")
-    def records(self) -> Records[Competition]:
-        competition = Competition(
-            id_="comp_1",
-            name="Premier League",
-            season_id="2023",
-            season_name="2023/24",
-            country="England",
-        )
+    def records(self, competition: Competition) -> Records[Competition]:
         df = pl.DataFrame([asdict(competition)])
         records = Records[Competition](df, Competition)
         return records
@@ -66,30 +62,8 @@ class TestRecords:
 
 class TestEvents:
     @pytest.fixture(scope="class")
-    def df(self) -> pl.DataFrame:
-        event1 = Event(
-            id_="event_1",
-            type_="pass",
-            time="1000",
-            team_id="team_1",
-            player_id="player_1",
-            game_id="game_1",
-            x=50.0,
-            y=30.0,
-            part=1,
-        )
-        event2 = Event(
-            id_="event_2",
-            type_="shot",
-            time="2000",
-            team_id="team_2",
-            player_id="player_2",
-            game_id="game_1",
-            x=70.0,
-            y=40.0,
-            part=1,
-        )
-        df = pl.DataFrame([asdict(event1), asdict(event2)])
+    def df(self, event_1: Event, event_2: Event) -> pl.DataFrame:
+        df = pl.DataFrame([asdict(event_1), asdict(event_2)])
         df = df.with_columns(
             [
                 pl.col("game_id").cast(pl.Categorical),
@@ -123,3 +97,59 @@ class TestEvents:
         other_events = Events(df, other_pitch)
         with pytest.raises(ValueError):
             _ = events + other_events
+
+
+class TestShots:
+    @pytest.fixture(scope="class")
+    def df(self, shot_1: Shot, shot_2: Shot) -> pl.DataFrame:
+        df = pl.DataFrame([asdict(shot_1), asdict(shot_2)])
+        df = df.with_columns(
+            [
+                pl.col("game_id").cast(pl.Categorical),
+                pl.col("team_id").cast(pl.Categorical),
+                pl.col("player_id").cast(pl.Categorical),
+                pl.col("type_").cast(pl.Categorical),
+                pl.col("part").cast(pl.Int32),
+            ]
+        )
+        return df
+
+    @pytest.fixture(scope="class")
+    def Shots(self, df: pl.DataFrame) -> Shots:
+        pitch = Pitch(length=120, width=80)
+        shots_df = df.filter(pl.col("type_") == "shot")
+        shots = Shots(shots_df, pitch)
+        return shots
+
+
+class TestPart:
+    @pytest.fixture(scope="class")
+    def df(self, event_1: Event, event_2: Event) -> pl.DataFrame:
+        df = pl.DataFrame([asdict(event_1), asdict(event_2)])
+        df = df.with_columns(
+            [
+                pl.col("game_id").cast(pl.Categorical),
+                pl.col("team_id").cast(pl.Categorical),
+                pl.col("player_id").cast(pl.Categorical),
+                pl.col("type_").cast(pl.Categorical),
+                pl.col("part").cast(pl.Int32),
+            ]
+        )
+        return df
+
+    @pytest.fixture(scope="class")
+    def part(self, df: pl.DataFrame) -> Part:
+        pitch = Pitch(length=120, width=80)
+        part = Part(df, pitch)
+        return part
+
+    def test_different_part_id_error(self, df: pl.DataFrame) -> None:
+        pitch = Pitch(length=120, width=80)
+        df_diff_part = df.with_columns(
+            pl.when(pl.col("id_") == "event_2")
+            .then(2)
+            .otherwise(pl.col("part"))
+            .alias("part")
+        )
+        with pytest.raises(ValueError):
+            _ = Part(df_diff_part, pitch)
