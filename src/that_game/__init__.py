@@ -13,7 +13,13 @@ from ._models import (
     Shots,
     Team,
 )
-from ._parsers import StatsBombEventsParser
+from ._parsers import (
+    StatsBombCompetitionsParser,
+    StatsBombEventsParser,
+    StatsBombGamesInfoParser,
+    StatsBombPlayersParser,
+    StatsBombTeamsParser,
+)
 from ._utils import dataclass_instances_to_df
 
 __all__ = (
@@ -32,4 +38,8 @@ __all__ = (
     "Team",
     "dataclass_instances_to_df",
     "StatsBombEventsParser",
+    "StatsBombGamesInfoParser",
+    "StatsBombPlayersParser",
+    "StatsBombTeamsParser",
+    "StatsBombCompetitionsParser",
 )

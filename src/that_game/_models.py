@@ -121,11 +121,24 @@ class Records(Generic[R]):
     def export(self) -> dict[str, R]:
         return {row["id_"]: self._model(**row) for row in self.df.to_dicts()}
 
-    def find(self, id_: str) -> R | None:
-        row = self.df.filter(pl.col("id_") == id_).to_dicts()
-        if row:
-            return self._model(**row[0])
-        return None
+    def _find_df(self, **kwargs: str) -> pl.DataFrame:
+        df = self.df
+        for key, value in kwargs.items():
+            if key not in df.columns:
+                raise ValueError(f"Column '{key}' does not exist in DataFrame")
+            df = df.filter(pl.col(key) == value)
+        return df
+
+    def find_all(self, **kwargs: str) -> list[R]:
+        df = self._find_df(**kwargs)
+        return [self._model(**row) for row in df.to_dicts()]
+
+    def find_one(self, **kwargs: str) -> R:
+        df = self._find_df(**kwargs)
+        if df.is_empty():
+            raise ValueError("No record found")
+        row = df.to_dicts()[0]
+        return self._model(**row)
 
     def sample(self) -> R:
         row = self.df.sample(n=1).to_dicts()

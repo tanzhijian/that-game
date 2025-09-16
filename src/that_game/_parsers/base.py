@@ -5,13 +5,10 @@ from typing import Any
 
 import polars as pl
 
-from .._models import Event, Events, Pitch, Record, Records
-from .._utils import transform_schema
+from .._models import Events, Pitch, Records
 
 
 class Parser(ABC):
-    required_schema = transform_schema(Record)
-
     def _df_source_parameterization(
         self, source: str | bytes | io.IOBase | Path
     ) -> bytes | io.IOBase | Path:
@@ -34,7 +31,6 @@ class Parser(ABC):
 
 
 class EventsParser(Parser, ABC):
-    required_schema = transform_schema(Event)
     _pitch = Pitch()
 
     def parse(self, source: str | bytes | io.IOBase | Path) -> Events:

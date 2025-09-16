@@ -46,14 +46,13 @@ class TestRecords:
         assert isinstance(exported["comp_1"], Competition)
 
     def test_find_existing(self, records: Records[Competition]) -> None:
-        found = records.find("comp_1")
-        assert found is not None
+        found = records.find_one(id_="comp_1")
         assert isinstance(found, Competition)
         assert found.id_ == "comp_1"
 
     def test_find_non_existing(self, records: Records[Competition]) -> None:
-        found = records.find("non_existing")
-        assert found is None
+        with pytest.raises(ValueError):
+            _ = records.find_one(id_="non_existing")
 
     def test_sample(self, records: Records[Competition]) -> None:
         sample = records.sample()
