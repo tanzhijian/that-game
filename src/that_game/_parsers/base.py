@@ -28,20 +28,6 @@ class Parser(ABC):
     def _process(self, df: pl.DataFrame) -> pl.DataFrame:
         raise NotImplementedError
 
-    def parse_raw_df(
-        self, source: str | bytes | io.IOBase | Path
-    ) -> pl.DataFrame:
-        source = self._df_source_parameterization(source)
-        df = self._read(source)
-        return df
-
-    def _parse_df(
-        self, source: str | bytes | io.IOBase | Path
-    ) -> pl.DataFrame:
-        df = self.parse_raw_df(source)
-        df = self._process(df)
-        return df
-
     @abstractmethod
     def parse(self, source: str | bytes | io.IOBase | Path) -> Records[Any]:
         raise NotImplementedError
@@ -52,5 +38,7 @@ class EventsParser(Parser, ABC):
     _pitch = Pitch()
 
     def parse(self, source: str | bytes | io.IOBase | Path) -> Events:
-        df = self._parse_df(source)
+        source = self._df_source_parameterization(source)
+        df = self._read(source)
+        df = self._process(df)
         return Events(df, self._pitch)

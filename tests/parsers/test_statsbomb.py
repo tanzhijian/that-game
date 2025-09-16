@@ -13,6 +13,9 @@ class TestStatsBombEventsParser:
         return StatsBombEventsParser()
 
     def test_parse(self, parser: StatsBombEventsParser) -> None:
-        records = parser.parse(data_path / "events_3895333.json")
-        sample = records.sample()
-        assert type(sample.id_) is str
+        records = parser.parse(
+            data_path / "events_3895333.json", game_id="3895333"
+        )
+        assert records.df['game_id'].n_unique() == 1
+        event = records.sample()
+        assert event.game_id == "3895333"
