@@ -4,11 +4,12 @@ from that_game import (
     Competition,
     Event,
     Shot,
+    Team,
 )
 
 
 @pytest.fixture(scope="module")
-def competition() -> Competition:
+def competition_1() -> Competition:
     return Competition(
         id_="comp_1",
         name="Premier League",
@@ -19,6 +20,25 @@ def competition() -> Competition:
 
 
 @pytest.fixture(scope="module")
+def competition_2() -> Competition:
+    return Competition(
+        id_="comp_2",
+        name="La Liga",
+        season_id="2023",
+        season_name="2023/24",
+        country="Spain",
+    )
+
+@pytest.fixture(scope="module")
+def team_1() -> Team:
+    return Team(
+        id_="team_1",
+        name="Team A",
+        color="#FF0000",
+    )
+
+
+@pytest.fixture(scope="session")
 def event_1() -> Event:
     return Event(
         id_="event_1",
@@ -33,7 +53,7 @@ def event_1() -> Event:
     )
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="session")
 def event_2() -> Event:
     return Event(
         id_="event_2",

@@ -19,15 +19,22 @@ from that_game import (
 
 class TestRecords:
     @pytest.fixture(scope="class")
-    def records(self, competition: Competition) -> Records[Competition]:
-        df = pl.DataFrame([asdict(competition)])
+    def records(self, competition_1: Competition) -> Records[Competition]:
+        df = pl.DataFrame([asdict(competition_1)])
         records = Records[Competition](df, Competition)
         return records
 
-    def test_addition(self, records: Records[Competition]) -> None:
-        combined = records + records
+    def test_addition(
+        self,
+        records: Records[Competition],
+        competition_2: Competition,
+    ) -> None:
+        records_2 = Records[Competition](
+            pl.DataFrame([asdict(competition_2)]), Competition
+        )
+        combined = records + records_2
         assert isinstance(combined, Records)
-        assert len(combined.df) == 2 * len(records.df)
+        assert len(combined.df) == 2
 
     def test_addition_type_error(self, records: Records[Competition]) -> None:
         with pytest.raises(TypeError):
@@ -39,20 +46,33 @@ class TestRecords:
         with pytest.raises(ValueError):
             _ = records + other_records  # type: ignore
 
-    def tes_export(self, records: Records[Competition]) -> None:
+    def test_export(self, records: Records[Competition]) -> None:
         exported = records.export()
         assert isinstance(exported, dict)
         assert "comp_1" in exported
         assert isinstance(exported["comp_1"], Competition)
 
-    def test_find_existing(self, records: Records[Competition]) -> None:
+    def test_filter_df(self, records: Records[Competition]) -> None:
+        filtered = records.filter_df(id_="comp_1")
+        assert isinstance(filtered, pl.DataFrame)
+        assert len(filtered) == 1
+        assert filtered[0, "id_"] == "comp_1"
+
+    def test_find_one_existing(self, records: Records[Competition]) -> None:
         found = records.find_one(id_="comp_1")
         assert isinstance(found, Competition)
         assert found.id_ == "comp_1"
 
-    def test_find_non_existing(self, records: Records[Competition]) -> None:
+    def test_find_one_non_existing(
+        self, records: Records[Competition]
+    ) -> None:
         with pytest.raises(ValueError):
             _ = records.find_one(id_="non_existing")
+
+    def test_find_all(self, records: Records[Competition]) -> None:
+        all_records = records.find_all(id_="comp_1")
+        assert isinstance(all_records, list)
+        assert len(all_records) == 1
 
     def test_sample(self, records: Records[Competition]) -> None:
         sample = records.sample()

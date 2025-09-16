@@ -121,7 +121,7 @@ class Records(Generic[R]):
     def export(self) -> dict[str, R]:
         return {row["id_"]: self._model(**row) for row in self.df.to_dicts()}
 
-    def _find_df(self, **kwargs: str) -> pl.DataFrame:
+    def filter_df(self, **kwargs: str | int | float | bool) -> pl.DataFrame:
         df = self.df
         for key, value in kwargs.items():
             if key not in df.columns:
@@ -129,12 +129,12 @@ class Records(Generic[R]):
             df = df.filter(pl.col(key) == value)
         return df
 
-    def find_all(self, **kwargs: str) -> list[R]:
-        df = self._find_df(**kwargs)
+    def find_all(self, **kwargs: str | int | float | bool) -> list[R]:
+        df = self.filter_df(**kwargs)
         return [self._model(**row) for row in df.to_dicts()]
 
-    def find_one(self, **kwargs: str) -> R:
-        df = self._find_df(**kwargs)
+    def find_one(self, **kwargs: str | int | float | bool) -> R:
+        df = self.filter_df(**kwargs)
         if df.is_empty():
             raise ValueError("No record found")
         row = df.to_dicts()[0]
@@ -157,7 +157,10 @@ class Records(Generic[R]):
 
     def _concat_with(self, other: Self) -> Self:
         return type(self)(
-            pl.concat([self.df, other.df], how="vertical"), self._model
+            pl.concat([self.df, other.df], how="vertical").unique(
+                subset=["id_"]
+            ),
+            self._model,
         )
 
     def __add__(self, other: Self) -> Self:
