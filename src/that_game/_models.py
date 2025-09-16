@@ -9,8 +9,8 @@ from ._utils import transform_schema, validate_schema
 
 @dataclass
 class Pitch:
-    length: float
-    width: float
+    length: float = 105
+    width: float = 68
 
 
 @dataclass
