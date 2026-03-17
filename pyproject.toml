@@ -6,8 +6,11 @@ readme = "README.md"
 authors = [
     { name = "tanzhijian", email = "tanzhijianorg@outlook.com" }
 ]
-requires-python = ">=3.14"
-dependencies = []
+requires-python = ">=3.12"
+dependencies = [
+    "polars>=1.38.1",
+    "xmltodict>=1.0.4",
+]
 
 [project.scripts]
 that-game = "that_game:main"

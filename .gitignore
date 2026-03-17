@@ -13,3 +13,5 @@ wheels/
 __MACOSX
 *.sublime-project
 *.sublime-workspace
+
+preview.py
