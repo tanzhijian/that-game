@@ -7,6 +7,7 @@ from ._types import DataType, SupportedTypes
 class Provider:
     data_type: SupportedTypes
     root: str
+    type_route: str
 
     def get_root(self, data: DataType) -> DataType:
         return data
@@ -15,4 +16,5 @@ class Provider:
 statsbomb = Provider(
     data_type="json",
     root=".",
+    type_route="type.name",
 )
