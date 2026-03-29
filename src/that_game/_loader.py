@@ -1,58 +1,46 @@
-import json
 from pathlib import Path
+from typing import Any
 
 import polars as pl
+import xmltodict
 
 from ._models import Records
 from ._providers import Provider
-from ._types import DataType, InputTypes, PreTypes, SupportedTypes
 
 
-def _maybe_read(data: InputTypes) -> PreTypes:
-    if isinstance(data, Path):
-        return data.read_text()
-    if isinstance(data, str):
-        path = Path(data)
+def _maybe_read(input_: Any) -> str:
+    if isinstance(input_, Path):
+        return input_.read_text()
+    if isinstance(input_, str):
+        path = Path(input_)
         if path.is_file():
             return path.read_text()
-    return data
+        return input_
+    raise ValueError(f"Unsupported input type: {type(input_)}")
 
 
-def _load_csv(pre: str) -> DataType: ...
+def _load_xml(input_: Any) -> pl.DataFrame:
+    text = _maybe_read(input_)
+    data = xmltodict.parse(text)
+    return pl.DataFrame(data, infer_schema_length=None)
 
 
-def _load_xml(pre: str) -> DataType: ...
-
-
-def _load_json(pre: str) -> DataType:
-    return json.loads(pre)
-
-
-def _load_jsonl(pre: str) -> DataType: ...
-
-
-def _load_data(
-    pre: PreTypes,
-    type_: SupportedTypes,
-) -> DataType:
-    if isinstance(pre, str):
-        match type_:
-            case "xml":
-                return _load_xml(pre)
-            case "csv":
-                return _load_csv(pre)
+def load(input_: Any, provider: Provider) -> Records:
+    if isinstance(input_, (list, dict)):
+        df = pl.DataFrame(input_, infer_schema_length=None)
+    else:
+        match provider.data_type:
             case "json":
-                return _load_json(pre)
+                df = pl.read_json(input_, infer_schema_length=None)
             case "jsonl":
-                return _load_jsonl(pre)
+                df = pl.read_ndjson(input_, infer_schema_length=None)
+            case "csv":
+                df = pl.read_csv(input_, infer_schema_length=None)
+            case "xml":
+                df = _load_xml(input_)
             case _:
-                raise ValueError(f"Unsupported data type: {type_}")
-    return pre
+                raise ValueError(
+                    f"Unsupported data type: {provider.data_type}"
+                )
 
-
-def load(input_: InputTypes, provider: Provider) -> Records:
-    pre = _maybe_read(input_)
-    data = _load_data(pre, provider.data_type)
-    root = provider.get_root(data)
-    df = pl.DataFrame(root, infer_schema_length=None)
     return Records(df, provider)

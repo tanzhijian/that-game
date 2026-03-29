@@ -1,15 +1,14 @@
 from dataclasses import dataclass
-
-from ._types import DataType, SupportedTypes
+from typing import Any, Literal
 
 
 @dataclass
 class Provider:
-    data_type: SupportedTypes
+    data_type: Literal["csv", "xml", "json", "jsonl"]
     root: str
     type_route: str
 
-    def get_root(self, data: DataType) -> DataType:
+    def get_root(self, data: Any) -> Any:
         return data
 
 
