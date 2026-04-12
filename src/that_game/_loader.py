@@ -7,11 +7,15 @@ import xmltodict
 from ._models import Records
 from ._providers import Provider
 
+_MAX_PATH_LEN = 4096
+
 
 def _maybe_read(input_: Any) -> str:
     if isinstance(input_, Path):
         return input_.read_text()
     if isinstance(input_, str):
+        if len(input_) > _MAX_PATH_LEN:
+            return input_
         path = Path(input_)
         if path.is_file():
             return path.read_text()
