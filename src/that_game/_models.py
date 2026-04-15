@@ -5,43 +5,38 @@ import polars as pl
 from ._providers import Provider
 
 
+class Schema(dict):
+    pass
+
+
 class Record:
     def __init__(self, data: dict[str, Any]) -> None:
         self.data = data
 
 
 class Records:
-    indexable_fields = {"id", "type"}
-
     def __init__(self, data: pl.DataFrame, provider: Provider) -> None:
         self.data = data
         self.provider = provider
+        self.index: dict[str, str] = provider.index.__dict__
 
-    def _get_routes(self, key: str) -> list[str]:
-        match key:
-            case "type":
-                route = self.provider.type_route
-            case _:
-                raise ValueError(f"Unsupported filter key: {key}")
-        return route.split(".")
+    def __len__(self) -> int:
+        return len(self.data)
 
-    def _filter_df(
-        self,
-        df: pl.DataFrame,
-        key: str,
-        value: str | int | float | bool,
-    ) -> pl.DataFrame:
-        routes = self._get_routes(key)
-        expr = pl.col(routes[0])
-        if len(routes) > 1:
-            for route in routes[1:]:
-                expr = expr.struct.field(route)
-        return df.filter(expr == value)
+    @property
+    def fields(self) -> list[str]: ...
 
-    def filter(self, **kwargs: str | int | float | bool) -> "Records":
-        df = self.data
+    @property
+    def schema(self) -> Schema: ...
+
+    def filter(self, **kwargs: Any) -> "Records":
+        mask = pl.lit(True)
         for key, value in kwargs.items():
-            if key not in self.indexable_fields:
-                raise ValueError(f"Column '{key}' does not exist in DataFrame")
-            df = self._filter_df(df, key, value)
-        return Records(df, self.provider)
+            mask &= pl.col(self.index[key]) == value
+        records = Records(self.data.filter(mask), self.provider)
+        if len(records) < 1:
+            raise ValueError(f"No records found for criteria: {kwargs}")
+        return records
+
+    def select(self, *args: str) -> pl.DataFrame:
+        return self.data.select(args)
