@@ -2,7 +2,7 @@ from typing import Any
 
 import polars as pl
 
-from ._providers import Provider
+from ._providers.base import Provider
 
 
 class Schema(dict):
@@ -18,7 +18,7 @@ class Records:
     def __init__(self, data: pl.DataFrame, provider: Provider) -> None:
         self.data = data
         self.provider = provider
-        self.index: dict[str, str] = provider.index.__dict__
+        self.index = provider.index
 
     def __len__(self) -> int:
         return len(self.data)
@@ -32,6 +32,12 @@ class Records:
     def filter(self, **kwargs: Any) -> "Records":
         mask = pl.lit(True)
         for key, value in kwargs.items():
+            if key not in self.index:
+                raise KeyError(
+                    f"Invalid filter key: {key}, "
+                    f"expected one of {list(self.index.keys())}"
+                )
+
             mask &= pl.col(self.index[key]) == value
         records = Records(self.data.filter(mask), self.provider)
         if len(records) < 1:

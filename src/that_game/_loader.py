@@ -6,7 +6,7 @@ import polars as pl
 import xmltodict
 
 from ._models import Records
-from ._providers import Provider
+from ._providers.base import Provider
 
 _MAX_PATH_LEN = 4096
 

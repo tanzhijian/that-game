@@ -1,22 +1,6 @@
-from dataclasses import dataclass
-from typing import Callable, Literal
-
 import polars as pl
 
-
-@dataclass(kw_only=True)
-class Index:
-    id_: str
-    type_: str
-
-
-@dataclass(kw_only=True)
-class Provider:
-    data_type: Literal["csv", "xml", "json", "jsonl"]
-    root: str = "."
-    preprocess: Callable[[pl.DataFrame], pl.DataFrame] | None = None
-
-    index: Index
+from .base import Index, Provider
 
 
 def _sportec_events_add_type_field(df: pl.DataFrame) -> pl.DataFrame:
@@ -47,13 +31,12 @@ def _sportec_events_add_type_field(df: pl.DataFrame) -> pl.DataFrame:
             pl.element()
             .str.split(".")
             .list.explode(keep_nulls=False, empty_as_null=True)
-
         )
         .list.eval(
             pl.element()
             .filter(
-                (pl.element().str.starts_with("@").not_()) &
-                (pl.element() != "")
+                (pl.element().str.starts_with("@").not_())
+                & (pl.element() != "")
             )
             .unique(maintain_order=True)
         )
@@ -62,11 +45,6 @@ def _sportec_events_add_type_field(df: pl.DataFrame) -> pl.DataFrame:
     )
 
 
-statsbomb = Provider(
-    data_type="json",
-    root=".",
-    index=Index(id_="id", type_="type.name"),
-)
 sportec = Provider(
     data_type="xml",
     root="PutDataRequest.Event",
