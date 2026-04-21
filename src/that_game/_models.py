@@ -24,9 +24,6 @@ class Records:
         return len(self.data)
 
     @property
-    def fields(self) -> list[str]: ...
-
-    @property
     def types(self) -> list[str]:
         return sorted(self.data[self.field_map["type_"]].unique().to_list())
 
@@ -60,6 +57,3 @@ class Records:
         if len(records) < 1:
             raise ValueError(f"No records found for criteria: {kwargs}")
         return records
-
-    def select(self, *args: str) -> pl.DataFrame:
-        return self.data.select(args)
