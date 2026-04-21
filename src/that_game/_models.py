@@ -14,6 +14,19 @@ class Record:
         self.data = data
 
 
+def _set_nested_value(
+    data: dict[str, Any],
+    key: str,
+    value: Any,
+    separator: str,
+) -> None:
+    keys = key.split(separator)
+    current = data
+    for part in keys[:-1]:
+        current = current.setdefault(part, {})
+    current[keys[-1]] = value
+
+
 class Records:
     def __init__(self, data: pl.DataFrame, provider: Provider) -> None:
         self.data = data
@@ -29,6 +42,21 @@ class Records:
 
     @property
     def schema(self) -> Schema: ...
+
+    def to_dict(self, separator: str = ".") -> list[dict[str, Any]]:
+        records = self.data.to_dicts()
+        nested_records: list[dict[str, Any]] = []
+
+        for record in records:
+            nested_record: dict[str, Any] = {}
+            for key, value in record.items():
+                if separator in key:
+                    _set_nested_value(nested_record, key, value, separator)
+                else:
+                    nested_record[key] = value
+            nested_records.append(nested_record)
+
+        return nested_records
 
     def filter(
         self,
