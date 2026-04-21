@@ -4,7 +4,7 @@ from typing import Callable, Literal, TypedDict
 import polars as pl
 
 
-class Index(TypedDict):
+class FieldMap(TypedDict):
     id_: str
     type_: str
 
@@ -15,4 +15,4 @@ class Provider:
     root: str = "."
     preprocess: Callable[[pl.DataFrame], pl.DataFrame] | None = None
 
-    index: Index
+    field_map: FieldMap

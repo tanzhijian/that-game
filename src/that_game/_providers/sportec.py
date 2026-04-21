@@ -1,6 +1,6 @@
 import polars as pl
 
-from .base import Index, Provider
+from .base import FieldMap, Provider
 
 
 def _sportec_events_add_type_field(df: pl.DataFrame) -> pl.DataFrame:
@@ -49,5 +49,5 @@ sportec = Provider(
     data_type="xml",
     root="PutDataRequest.Event",
     preprocess=_sportec_events_add_type_field,
-    index=Index(id_="@EventId", type_="type_name"),
+    field_map=FieldMap(id_="@EventId", type_="type_name"),
 )

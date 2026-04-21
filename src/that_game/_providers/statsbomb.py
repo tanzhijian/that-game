@@ -1,7 +1,7 @@
-from .base import Index, Provider
+from .base import FieldMap, Provider
 
 statsbomb = Provider(
     data_type="json",
     root=".",
-    index=Index(id_="id", type_="type.name"),
+    field_map=FieldMap(id_="id", type_="type.name"),
 )
