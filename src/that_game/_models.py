@@ -5,15 +5,6 @@ import polars as pl
 from ._providers.base import Provider
 
 
-class Schema(dict):
-    pass
-
-
-class Record:
-    def __init__(self, data: dict[str, Any]) -> None:
-        self.data = data
-
-
 def _set_nested_value(
     data: dict[str, Any],
     key: str,
@@ -38,10 +29,8 @@ class Records:
 
     @property
     def types(self) -> list[str]:
-        return sorted(self.data[self.field_map["type_"]].unique().to_list())
-
-    @property
-    def schema(self) -> Schema: ...
+        values = self.data[self.field_map["type_"]].unique().to_list()
+        return sorted(values, key=lambda x: (x is None, x))
 
     def to_dict(self, separator: str = ".") -> list[dict[str, Any]]:
         records = self.data.to_dicts()

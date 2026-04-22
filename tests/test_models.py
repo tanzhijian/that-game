@@ -1,7 +1,6 @@
 from that_game import load
 from that_game._providers.base import FieldMap, Provider
 
-
 provider = Provider(
     data_type="json",
     field_map=FieldMap(id_="id", type_="type.name"),
