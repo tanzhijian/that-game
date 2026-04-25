@@ -3,6 +3,8 @@ from typing import Callable, Literal, TypedDict
 
 import polars as pl
 
+NAME_SEPARATOR = ";"
+
 
 class FieldMap(TypedDict):
     id_: str
