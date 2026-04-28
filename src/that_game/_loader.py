@@ -1,4 +1,3 @@
-from functools import reduce
 from pathlib import Path
 from typing import Any
 
@@ -52,10 +51,14 @@ def _get_dict(
     data: dict[str, Any],
     target: str,
     separator: str = ".",
-) -> dict[str, Any]:
+) -> Any:
     # 暂时采用硬编码
-    keys = target.split(separator)
-    return reduce(dict.get, keys, data)
+    current: Any = data
+    for key in target.split(separator):
+        if not isinstance(current, dict):
+            return None
+        current = current.get(key)
+    return current
 
 
 def _load_xml(input_: Any, root: str) -> pl.DataFrame:

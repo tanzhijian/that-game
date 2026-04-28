@@ -23,7 +23,7 @@ class Records:
     def __init__(self, data: pl.DataFrame, provider: Provider) -> None:
         self.data = data
         self.provider = provider
-        self.field_map = provider.field_map
+        self.field_map = self.provider.field_map
 
     def __len__(self) -> int:
         return len(self.data)

@@ -33,6 +33,7 @@ line-length = 79
 [tool.mypy]
 ignore_missing_imports = true
 strict = true
+files = ["src"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests",]
