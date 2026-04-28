@@ -1,3 +1,5 @@
+import that_game.expression
+import that_game.providers
 from that_game import expression, load
 from that_game._providers.base import FieldMap, Provider
 
@@ -116,3 +118,11 @@ def test_records_filter_raises_for_expression_type_mismatch() -> None:
         raise AssertionError(
             "Expected ValueError for mismatched expression type"
         )
+
+
+def test_public_expression_module_supports_direct_submodule_import() -> None:
+    assert that_game.expression.ge(1).value == 1
+
+
+def test_public_providers_module_supports_direct_submodule_import() -> None:
+    assert that_game.providers.statsbomb.field_map["id_"] == "id"

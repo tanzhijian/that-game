@@ -2,8 +2,8 @@ from typing import Any
 
 import polars as pl
 
+from ._expression import FilterExpression
 from ._providers.base import Provider
-from .expression import FilterExpression
 
 
 def _set_nested_value(
