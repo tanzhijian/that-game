@@ -3,6 +3,66 @@ from typing import Any
 import polars as pl
 
 from ._providers.base import Provider
+from .expression import (
+    Between,
+    Compare,
+    EndsWith,
+    FilterExpression,
+    StartsWith,
+)
+
+
+def _is_numeric_dtype(dtype: pl.DataType) -> bool:
+    return dtype.is_numeric()
+
+
+def _build_filter_expr(
+    column: pl.Expr, value: Any, dtype: pl.DataType
+) -> pl.Expr:
+    if isinstance(value, FilterExpression):
+        if isinstance(value, Compare):
+            if not _is_numeric_dtype(dtype):
+                raise ValueError(
+                    "Comparison expressions require a numeric column"
+                )
+            if value.operator == ">":
+                return column > value.value
+            if value.operator == ">=":
+                return column >= value.value
+            if value.operator == "<":
+                return column < value.value
+            if value.operator == "<=":
+                return column <= value.value
+            raise ValueError(
+                f"Unsupported comparison operator: {value.operator}"
+            )
+
+        if isinstance(value, Between):
+            if not _is_numeric_dtype(dtype):
+                raise ValueError(
+                    "Between expressions require a numeric column"
+                )
+            return column.is_between(value.lower, value.upper, closed="both")
+
+        if isinstance(value, StartsWith):
+            if dtype != pl.String:
+                raise ValueError(
+                    "starts_with expressions require a string column"
+                )
+            return column.str.starts_with(value.value)
+
+        if isinstance(value, EndsWith):
+            if dtype != pl.String:
+                raise ValueError(
+                    "ends_with expressions require a string column"
+                )
+            return column.str.ends_with(value.value)
+
+        raise ValueError(
+            f"Unsupported filter expression: {type(value).__name__}"
+        )
+
+    return column == value
 
 
 def _set_nested_value(
@@ -61,7 +121,10 @@ class Records:
                     f"expected one of {list(self.field_map.keys())}"
                 )
 
-            mask &= pl.col(self.field_map[key]) == value
+            column_name = self.field_map[key]
+            column = pl.col(column_name)
+            dtype = self.data.schema[column_name]
+            mask &= _build_filter_expr(column, value, dtype)
         data = self.data.filter(mask)
 
         if drop_null_columns:
