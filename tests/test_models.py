@@ -88,6 +88,19 @@ def test_records_filter_supports_string_prefix_expression() -> None:
     assert [record["id"] for record in filtered.to_dict()] == ["1"]
 
 
+def test_records_filter_supports_string_suffix_expression() -> None:
+    payload = [
+        {"id": "1", "type": {"name": "Shot"}, "name": "alpha-name"},
+        {"id": "2", "type": {"name": "Pass"}, "name": "name-beta"},
+    ]
+
+    records = load(payload, extended_provider)
+
+    filtered = records.filter(name=expression.ends_with("name"))
+
+    assert [record["id"] for record in filtered.to_dict()] == ["1"]
+
+
 def test_records_filter_raises_for_expression_type_mismatch() -> None:
     payload = [
         {"id": "1", "type": {"name": "Shot"}, "name": "name-alpha"},
