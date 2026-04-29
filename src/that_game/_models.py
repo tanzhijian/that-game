@@ -19,6 +19,29 @@ def _set_nested_value(
     current[keys[-1]] = value
 
 
+def _to_nested_dicts(
+    df: pl.DataFrame, separator: str = "."
+) -> list[dict[str, Any]]:
+    items = df.to_dicts()
+    nested_items: list[dict[str, Any]] = []
+
+    for item in items:
+        nested_item: dict[str, Any] = {}
+        for key, value in item.items():
+            if separator in key:
+                _set_nested_value(nested_item, key, value, separator)
+            else:
+                nested_item[key] = value
+        nested_items.append(nested_item)
+
+    return nested_items
+
+
+def _drop_null_columns(df: pl.DataFrame) -> pl.DataFrame:
+    null_cols = [c for c in df.columns if df[c].null_count() == df.height]
+    return df.drop(null_cols)
+
+
 class Records:
     def __init__(self, data: pl.DataFrame, provider: Provider) -> None:
         self.data = data
@@ -29,19 +52,13 @@ class Records:
         return len(self.data)
 
     def to_dict(self, separator: str = ".") -> list[dict[str, Any]]:
-        records = self.data.to_dicts()
-        nested_records: list[dict[str, Any]] = []
+        data = _drop_null_columns(self.data)
+        return _to_nested_dicts(data, separator=separator)
 
-        for record in records:
-            nested_record: dict[str, Any] = {}
-            for key, value in record.items():
-                if separator in key:
-                    _set_nested_value(nested_record, key, value, separator)
-                else:
-                    nested_record[key] = value
-            nested_records.append(nested_record)
-
-        return nested_records
+    def sample(self) -> dict[str, Any]:
+        row = self.data.sample(1)
+        row = _drop_null_columns(row)
+        return _to_nested_dicts(row)[0]
 
     def filter(
         self,
@@ -67,10 +84,7 @@ class Records:
         data = self.data.filter(mask)
 
         if drop_null_columns:
-            null_cols = [
-                c for c in data.columns if data[c].null_count() == data.height
-            ]
-            data = data.drop(null_cols)
+            data = _drop_null_columns(data)
 
         records = type(self)(data, self.provider)
         if len(records) < 1:
@@ -81,7 +95,7 @@ class Records:
 class Events(Records):
     @property
     def types(self) -> list[str]:
-        values = self.data[self.field_map["type_"]].unique().to_list()
+        values = self.data[self.field_map["type"]].unique().to_list()
         return sorted(values, key=lambda x: (x is None, x))
 
 

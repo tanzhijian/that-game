@@ -9,7 +9,7 @@ from that_game._providers.base import FieldMap, Provider
 
 PROVIDER = Provider(
     data_type="json",
-    field_map=FieldMap(id_="id", type_="type.name"),
+    field_map=FieldMap(id="id", type="type.name"),
 )
 
 LOAD_DATA_DIR = Path(__file__).parent / "data" / "load"
@@ -50,7 +50,7 @@ class TestLoadFromFiles:
     ) -> None:
         provider = Provider(
             data_type=data_type,
-            field_map={"id_": "id", "type_": "type.name", "x": "x"},
+            field_map={"id": "id", "type": "type.name", "x": "x"},
         )
 
         records = load_events(LOAD_DATA_DIR / file_name, provider)
@@ -61,7 +61,7 @@ class TestLoadFromFiles:
         provider = Provider(
             data_type="xml",
             root="root.events.event",
-            field_map={"id_": "id", "type_": "type.name", "x": "x"},
+            field_map={"id": "id", "type": "type.name", "x": "x"},
         )
 
         records = load_events(LOAD_DATA_DIR / "sample.xml", provider)
@@ -77,7 +77,7 @@ class TestLoadPreprocess:
         provider = Provider(
             data_type="csv",
             preprocess=preprocess,
-            field_map={"id_": "id", "type_": "type.name", "x": "x"},
+            field_map={"id": "id", "type": "type.name", "x": "x"},
         )
 
         records = load_events(LOAD_DATA_DIR / "sample.csv", provider)
@@ -88,7 +88,7 @@ class TestLoadPreprocess:
 class TestLoadErrors:
     def test_load_rejects_unsupported_data_type(self) -> None:
         provider = Provider(
-            data_type="json", field_map={"id_": "id", "type_": "type.name"}
+            data_type="json", field_map={"id": "id", "type": "type.name"}
         )
         provider.data_type = "yaml"  # type: ignore[assignment]
 

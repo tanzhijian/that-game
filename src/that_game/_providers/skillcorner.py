@@ -22,7 +22,7 @@ skillcorner = Provider(
     data_type="csv",
     preprocess=_add_type_name,
     field_map=FieldMap(
-        id_="event_id",
-        type_="type_name",
+        id="event_id",
+        type="type_name",
     ),
 )

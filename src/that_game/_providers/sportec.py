@@ -49,5 +49,5 @@ sportec = Provider(
     data_type="xml",
     root="PutDataRequest.Event",
     preprocess=_add_type_name,
-    field_map=FieldMap(id_="@EventId", type_="type_name"),
+    field_map=FieldMap(id="@EventId", type="type_name"),
 )
