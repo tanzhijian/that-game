@@ -7,20 +7,20 @@ import xmltodict
 from ._models import Records
 from ._providers.base import Provider
 
-_MAX_PATH_LEN = 4096
+_INLINE_TEXT_LIMIT = 4096
 
 
-def _maybe_read(input_: Any) -> str:
-    if isinstance(input_, Path):
-        return input_.read_text()
-    if isinstance(input_, str):
-        if len(input_) > _MAX_PATH_LEN:
-            return input_
-        path = Path(input_)
+def _read_text_if_path(source: Any) -> str:
+    if isinstance(source, Path):
+        return source.read_text()
+    if isinstance(source, str):
+        if len(source) > _INLINE_TEXT_LIMIT:
+            return source
+        path = Path(source)
         if path.is_file():
             return path.read_text()
-        return input_
-    raise ValueError(f"Unsupported input type: {type(input_)}")
+        return source
+    raise ValueError(f"Unsupported input type: {type(source)}")
 
 
 def _flatten_structs(df: pl.DataFrame, separator: str = ".") -> pl.DataFrame:
@@ -47,7 +47,7 @@ def _flatten_structs(df: pl.DataFrame, separator: str = ".") -> pl.DataFrame:
     return _flatten_structs(df.select(exprs), separator)
 
 
-def _get_dict(
+def _get_nested_value(
     data: dict[str, Any],
     target: str,
     separator: str = ".",
@@ -61,32 +61,32 @@ def _get_dict(
     return current
 
 
-def _load_xml(input_: Any, root: str) -> pl.DataFrame:
+def _load_xml(source: Any, root: str) -> pl.DataFrame:
     # 以后为了性能，可以考虑使用 lxml 优化
-    text = _maybe_read(input_)
+    text = _read_text_if_path(source)
     data = xmltodict.parse(text)
 
     # 是否需要预处理
     # xml 需要的数据可能不在头部，需要向下获取
     if root != ".":
-        data = _get_dict(data, root)
+        data = _get_nested_value(data, root)
 
     return pl.DataFrame(data, infer_schema_length=None)
 
 
-def load(input_: Any, provider: Provider) -> Records:
-    if isinstance(input_, (list, dict)):
-        df = pl.DataFrame(input_, infer_schema_length=None)
+def load(source: Any, provider: Provider) -> Records:
+    if isinstance(source, (list, dict)):
+        df = pl.DataFrame(source, infer_schema_length=None)
     else:
         match provider.data_type:
             case "json":
-                df = pl.read_json(input_, infer_schema_length=None)
+                df = pl.read_json(source, infer_schema_length=None)
             case "jsonl":
-                df = pl.read_ndjson(input_, infer_schema_length=None)
+                df = pl.read_ndjson(source, infer_schema_length=None)
             case "csv":
-                df = pl.read_csv(input_, infer_schema_length=None)
+                df = pl.read_csv(source, infer_schema_length=None)
             case "xml":
-                df = _load_xml(input_, provider.root)
+                df = _load_xml(source, provider.root)
             case _:
                 raise ValueError(
                     f"Unsupported data type: {provider.data_type}"

@@ -72,10 +72,10 @@ class Records:
         data = self.data.filter(mask)
 
         if drop_null_columns:
-            drop_cols = [
+            null_cols = [
                 c for c in data.columns if data[c].null_count() == data.height
             ]
-            data = data.drop(drop_cols)
+            data = data.drop(null_cols)
 
         records = Records(data, self.provider)
         if len(records) < 1:
