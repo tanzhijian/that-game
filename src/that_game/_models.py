@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, Self
 
 import polars as pl
 
@@ -28,11 +28,6 @@ class Records:
     def __len__(self) -> int:
         return len(self.data)
 
-    @property
-    def types(self) -> list[str]:
-        values = self.data[self.field_map["type_"]].unique().to_list()
-        return sorted(values, key=lambda x: (x is None, x))
-
     def to_dict(self, separator: str = ".") -> list[dict[str, Any]]:
         records = self.data.to_dicts()
         nested_records: list[dict[str, Any]] = []
@@ -53,7 +48,7 @@ class Records:
         *,
         drop_null_columns: bool = False,
         **kwargs: Any,
-    ) -> "Records":
+    ) -> Self:
         mask = pl.lit(True)
         for key, value in kwargs.items():
             if key not in self.field_map:
@@ -77,7 +72,18 @@ class Records:
             ]
             data = data.drop(null_cols)
 
-        records = Records(data, self.provider)
+        records = type(self)(data, self.provider)
         if len(records) < 1:
             raise ValueError(f"No records found for criteria: {kwargs}")
         return records
+
+
+class Events(Records):
+    @property
+    def types(self) -> list[str]:
+        values = self.data[self.field_map["type_"]].unique().to_list()
+        return sorted(values, key=lambda x: (x is None, x))
+
+
+class Tracking(Records):
+    pass

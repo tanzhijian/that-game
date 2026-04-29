@@ -4,7 +4,7 @@ from typing import Literal
 import polars as pl
 import pytest
 
-from that_game import load
+from that_game import load_events
 from that_game._providers.base import FieldMap, Provider
 
 PROVIDER = Provider(
@@ -29,7 +29,7 @@ class TestLoadFromPythonData:
     def test_load_accepts_dict_input(self) -> None:
         payload = {"id": ["1"], "type": [{"name": "Shot"}]}
 
-        records = load(payload, PROVIDER)
+        records = load_events(payload, PROVIDER)
 
         assert records.to_dict() == [{"id": "1", "type": {"name": "Shot"}}]
 
@@ -53,7 +53,7 @@ class TestLoadFromFiles:
             field_map={"id_": "id", "type_": "type.name", "x": "x"},
         )
 
-        records = load(LOAD_DATA_DIR / file_name, provider)
+        records = load_events(LOAD_DATA_DIR / file_name, provider)
 
         assert records.to_dict() == EXPECTED_FILE_RECORDS
 
@@ -64,7 +64,7 @@ class TestLoadFromFiles:
             field_map={"id_": "id", "type_": "type.name", "x": "x"},
         )
 
-        records = load(LOAD_DATA_DIR / "sample.xml", provider)
+        records = load_events(LOAD_DATA_DIR / "sample.xml", provider)
 
         assert records.to_dict() == EXPECTED_XML_RECORDS
 
@@ -80,7 +80,7 @@ class TestLoadPreprocess:
             field_map={"id_": "id", "type_": "type.name", "x": "x"},
         )
 
-        records = load(LOAD_DATA_DIR / "sample.csv", provider)
+        records = load_events(LOAD_DATA_DIR / "sample.csv", provider)
 
         assert [record["x"] for record in records.to_dict()] == [20, 40]
 
@@ -93,4 +93,4 @@ class TestLoadErrors:
         provider.data_type = "yaml"  # type: ignore[assignment]
 
         with pytest.raises(ValueError, match="Unsupported data type: yaml"):
-            load("ignored", provider)
+            load_events("ignored", provider)

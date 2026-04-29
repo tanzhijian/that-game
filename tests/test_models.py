@@ -1,7 +1,7 @@
 import pytest
 
 import that_game.providers
-from that_game import expression, load
+from that_game import expression, load_events
 from that_game._providers.base import FieldMap, Provider
 
 PROVIDER = Provider(
@@ -65,47 +65,47 @@ RECORDS_PAYLOAD = [
 
 class TestRecordsToDict:
     def test_restores_nested_structure(self) -> None:
-        records = load(NESTED_PAYLOAD, PROVIDER)
+        records = load_events(NESTED_PAYLOAD, PROVIDER)
 
         assert records.to_dict() == NESTED_PAYLOAD
 
     def test_restores_multiple_nested_levels(self) -> None:
-        records = load(MULTI_LEVEL_PAYLOAD, PROVIDER)
+        records = load_events(MULTI_LEVEL_PAYLOAD, PROVIDER)
 
         assert records.to_dict() == MULTI_LEVEL_PAYLOAD
 
 
 class TestRecordsFilter:
     def test_supports_numeric_comparison_expression(self) -> None:
-        records = load(RECORDS_PAYLOAD, EXTENDED_PROVIDER)
+        records = load_events(RECORDS_PAYLOAD, EXTENDED_PROVIDER)
 
         filtered = records.filter(x=expression.ge(20))
 
         assert [record["id"] for record in filtered.to_dict()] == ["2", "3"]
 
     def test_supports_between_expression(self) -> None:
-        records = load(RECORDS_PAYLOAD, EXTENDED_PROVIDER)
+        records = load_events(RECORDS_PAYLOAD, EXTENDED_PROVIDER)
 
         filtered = records.filter(x=expression.between(15, 25))
 
         assert [record["id"] for record in filtered.to_dict()] == ["2"]
 
     def test_supports_string_prefix_expression(self) -> None:
-        records = load(RECORDS_PAYLOAD, EXTENDED_PROVIDER)
+        records = load_events(RECORDS_PAYLOAD, EXTENDED_PROVIDER)
 
         filtered = records.filter(name=expression.starts_with("name"))
 
         assert [record["id"] for record in filtered.to_dict()] == ["1"]
 
     def test_supports_string_suffix_expression(self) -> None:
-        records = load(RECORDS_PAYLOAD, EXTENDED_PROVIDER)
+        records = load_events(RECORDS_PAYLOAD, EXTENDED_PROVIDER)
 
         filtered = records.filter(name=expression.ends_with("name"))
 
         assert [record["id"] for record in filtered.to_dict()] == ["2", "3"]
 
     def test_raises_for_expression_type_mismatch(self) -> None:
-        records = load(RECORDS_PAYLOAD, EXTENDED_PROVIDER)
+        records = load_events(RECORDS_PAYLOAD, EXTENDED_PROVIDER)
 
         with pytest.raises(
             ValueError,
@@ -114,7 +114,7 @@ class TestRecordsFilter:
             records.filter(name=expression.ge(10))
 
     def test_raises_for_invalid_filter_key(self) -> None:
-        records = load(RECORDS_PAYLOAD, EXTENDED_PROVIDER)
+        records = load_events(RECORDS_PAYLOAD, EXTENDED_PROVIDER)
 
         with pytest.raises(ValueError, match="No records found"):
             records.filter(id_="missing")
@@ -123,7 +123,7 @@ class TestRecordsFilter:
             records.filter(missing="value")
 
     def test_drop_null_columns_removes_columns_with_only_nulls(self) -> None:
-        records = load(RECORDS_PAYLOAD, EXTENDED_PROVIDER)
+        records = load_events(RECORDS_PAYLOAD, EXTENDED_PROVIDER)
 
         filtered = records.filter(id_="1", drop_null_columns=True)
 
@@ -132,7 +132,7 @@ class TestRecordsFilter:
 
 class TestRecordsTypes:
     def test_types_returns_sorted_unique_values(self) -> None:
-        records = load(RECORDS_PAYLOAD, EXTENDED_PROVIDER)
+        records = load_events(RECORDS_PAYLOAD, EXTENDED_PROVIDER)
 
         assert records.types == ["Carry", "Pass", "Shot"]
 

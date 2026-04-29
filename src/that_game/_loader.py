@@ -4,7 +4,7 @@ from typing import Any
 import polars as pl
 import xmltodict
 
-from ._models import Records
+from ._models import Events, Tracking
 from ._providers.base import Provider
 
 _INLINE_TEXT_LIMIT = 4096
@@ -74,7 +74,7 @@ def _load_xml(source: Any, root: str) -> pl.DataFrame:
     return pl.DataFrame(data, infer_schema_length=None)
 
 
-def load(source: Any, provider: Provider) -> Records:
+def _load_df(source: Any, provider: Provider) -> pl.DataFrame:
     if isinstance(source, (list, dict)):
         df = pl.DataFrame(source, infer_schema_length=None)
     else:
@@ -98,4 +98,14 @@ def load(source: Any, provider: Provider) -> Records:
     # 读取完成前，针对数据供应商的不同，特殊处理一些字段
     if provider.preprocess is not None:
         df = provider.preprocess(df)
-    return Records(df, provider)
+    return df
+
+
+def load_events(source: Any, provider: Provider) -> Events:
+    df = _load_df(source, provider)
+    return Events(df, provider)
+
+
+def load_tracking(source: Any, provider: Provider) -> Tracking:
+    df = _load_df(source, provider)
+    return Tracking(df, provider)
