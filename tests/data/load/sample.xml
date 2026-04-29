@@ -1,0 +1,18 @@
+<root>
+  <events>
+    <event>
+      <id>event-1</id>
+      <type>
+        <name>Shot</name>
+      </type>
+      <x>10</x>
+    </event>
+    <event>
+      <id>event-2</id>
+      <type>
+        <name>Pass</name>
+      </type>
+      <x>20</x>
+    </event>
+  </events>
+</root>

@@ -1,0 +1,16 @@
+[
+  {
+    "id": "event-1",
+    "type": {
+      "name": "Shot"
+    },
+    "x": 10
+  },
+  {
+    "id": "event-2",
+    "type": {
+      "name": "Pass"
+    },
+    "x": 20
+  }
+]
