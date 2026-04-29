@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Literal
 
 import polars as pl
 import pytest
@@ -44,7 +45,7 @@ class TestLoadFromFiles:
     )
     def test_load_supports_file_based_formats(
         self,
-        data_type: str,
+        data_type: Literal["csv", "xml", "json", "jsonl"],
         file_name: str,
     ) -> None:
         provider = Provider(

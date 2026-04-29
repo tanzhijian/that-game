@@ -1,3 +1,5 @@
+from typing import Any  # 这里暂时使用 Any, 等到后续调整了类型后再修改
+
 import polars as pl
 import pytest
 
@@ -17,7 +19,7 @@ class TestComparisonExpressions:
     )
     def test_compare_factories_create_expected_operators(
         self,
-        factory: object,
+        factory: Any,
         value: int,
         operator: str,
     ) -> None:
@@ -49,7 +51,7 @@ class TestComparisonExpressions:
     )
     def test_numeric_expressions_reject_non_numeric_columns(
         self,
-        factory: object,
+        factory: Any,
         args: tuple[int, ...],
         message: str,
     ) -> None:
@@ -70,7 +72,7 @@ class TestStringExpressions:
     )
     def test_string_factories_store_value(
         self,
-        factory: object,
+        factory: Any,
         value: str,
     ) -> None:
         expr = factory(value)
@@ -92,7 +94,7 @@ class TestStringExpressions:
     )
     def test_string_expressions_reject_non_string_columns(
         self,
-        factory: object,
+        factory: Any,
         message: str,
     ) -> None:
         with pytest.raises(
