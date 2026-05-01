@@ -6,22 +6,22 @@ import pytest
 import that_game.providers
 from that_game import Records, expression, load_events
 from that_game._models import Events
-from that_game._providers.base import FieldMap, Provider
+from that_game._providers.base import FieldAliases, Provider
 
 PROVIDER = Provider(
     data_type="json",
-    field_map=FieldMap(id="id", type="type.name"),
+    field_aliases=FieldAliases(id="id", type="type.name"),
 )
 
 EXTENDED_PROVIDER = Provider(
     data_type="json",
-    field_map={
-        "id": "id",
-        "type": "type.name",
-        "x": "x",
-        "name": "name",
-        "all_null": "all_null",
-    },
+    field_aliases=FieldAliases(
+        id="id",
+        type="type.name",
+        x="x",
+        name="name",
+        all_null="all_null",
+    ),
 )
 
 NESTED_PAYLOAD = [
@@ -179,4 +179,4 @@ class TestPublicProvidersModule:
     def test_public_providers_module_supports_direct_submodule_import(
         self,
     ) -> None:
-        assert that_game.providers.statsbomb.field_map["id"] == "id"
+        assert that_game.providers.statsbomb.field_aliases["id"] == "id"

@@ -1,7 +1,10 @@
-from .base import FieldMap, Provider
+from .base import FieldAliases, Provider
 
 statsbomb = Provider(
     data_type="json",
     root=".",
-    field_map=FieldMap(id="id", type="type.name"),
+    field_aliases=FieldAliases(
+        id="id",
+        type="type.name",
+    ),
 )

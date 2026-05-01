@@ -19,8 +19,7 @@ class TestSkillcornerProvider:
         )
 
         result = providers.skillcorner.preprocess(df)
-
-        assert result.get_column("type_name").to_list() == [
+        assert result.get_column("std_type").to_list() == [
             "Shot;OpenPlay;Goal",
             "Pass;ThrowIn",
         ]
@@ -52,6 +51,6 @@ class TestSportecProvider:
 
         result = providers.sportec.preprocess(df)
 
-        assert result.get_column("type_name").to_list() == [
+        assert result.get_column("std_type").to_list() == [
             "type;name;subType;detail;qualifier"
         ]

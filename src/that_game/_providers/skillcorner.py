@@ -1,6 +1,8 @@
 import polars as pl
 
-from .base import NAME_SEPARATOR, FieldMap, Provider
+from .base import NAME_SEPARATOR, PREFIX, FieldAliases, Provider
+
+_TYPE_NAME = f"{PREFIX}type"
 
 
 def _add_type_name(df: pl.DataFrame) -> pl.DataFrame:
@@ -14,15 +16,15 @@ def _add_type_name(df: pl.DataFrame) -> pl.DataFrame:
     return df.with_columns(
         pl.concat_list([pl.col(col) for col in type_cols])
         .list.join(NAME_SEPARATOR)
-        .alias("type_name")
+        .alias(_TYPE_NAME)
     )
 
 
 skillcorner = Provider(
     data_type="csv",
     preprocess=_add_type_name,
-    field_map=FieldMap(
+    field_aliases=FieldAliases(
         id="event_id",
-        type="type_name",
+        type=_TYPE_NAME,
     ),
 )

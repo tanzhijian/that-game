@@ -37,27 +37,27 @@ def _to_nested_dicts(
     return nested_items
 
 
-def _drop_null_columns(df: pl.DataFrame) -> pl.DataFrame:
+def _drop_null_and_std_columns(df: pl.DataFrame) -> pl.DataFrame:
     null_cols = [c for c in df.columns if df[c].null_count() == df.height]
-    return df.drop(null_cols)
+    return df.drop(null_cols, "^std_.*$")
 
 
 class Records:
     def __init__(self, data: pl.DataFrame, provider: Provider) -> None:
         self.data = data
         self.provider = provider
-        self.field_map = self.provider.field_map
+        self.aliases = self.provider.field_aliases
 
     def __len__(self) -> int:
         return len(self.data)
 
     def to_dict(self, separator: str = ".") -> list[dict[str, Any]]:
-        data = _drop_null_columns(self.data)
+        data = _drop_null_and_std_columns(self.data)
         return _to_nested_dicts(data, separator=separator)
 
     def sample(self) -> dict[str, Any]:
         row = self.data.sample(1)
-        row = _drop_null_columns(row)
+        row = _drop_null_and_std_columns(row)
         return _to_nested_dicts(row)[0]
 
     def filter(
@@ -68,13 +68,13 @@ class Records:
     ) -> Self:
         mask = pl.lit(True)
         for key, value in kwargs.items():
-            if key not in self.field_map:
+            if key not in self.aliases:
                 raise KeyError(
                     f"Invalid filter key: {key}, "
-                    f"expected one of {list(self.field_map.keys())}"
+                    f"expected one of {list(self.aliases.keys())}"
                 )
 
-            column_name = self.field_map[key]
+            column_name = self.aliases[key]
             column = pl.col(column_name)
             if isinstance(value, FilterExpression):
                 dtype = self.data.schema[column_name]
@@ -84,7 +84,7 @@ class Records:
         data = self.data.filter(mask)
 
         if drop_null_columns:
-            data = _drop_null_columns(data)
+            data = _drop_null_and_std_columns(data)
 
         records = type(self)(data, self.provider)
         if len(records) < 1:
@@ -95,7 +95,7 @@ class Records:
 class Events(Records):
     @property
     def types(self) -> list[str]:
-        values = self.data[self.field_map["type"]].unique().to_list()
+        values = self.data[self.aliases["type"]].unique().to_list()
         return sorted(values, key=lambda x: (x is None, x))
 
 

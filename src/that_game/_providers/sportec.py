@@ -1,6 +1,8 @@
 import polars as pl
 
-from .base import NAME_SEPARATOR, FieldMap, Provider
+from .base import NAME_SEPARATOR, PREFIX, FieldAliases, Provider
+
+_TYPE_NAME = f"{PREFIX}type"
 
 
 def _add_type_name(df: pl.DataFrame) -> pl.DataFrame:
@@ -41,7 +43,7 @@ def _add_type_name(df: pl.DataFrame) -> pl.DataFrame:
             .unique(maintain_order=True)
         )
         .list.join(NAME_SEPARATOR)
-        .alias("type_name")
+        .alias(_TYPE_NAME)
     )
 
 
@@ -49,5 +51,8 @@ sportec = Provider(
     data_type="xml",
     root="PutDataRequest.Event",
     preprocess=_add_type_name,
-    field_map=FieldMap(id="@EventId", type="type_name"),
+    field_aliases=FieldAliases(
+        id="@EventId",
+        type=_TYPE_NAME,
+    ),
 )
