@@ -21,9 +21,9 @@ build-backend = "uv_build"
 
 [dependency-groups]
 dev = [
-    "mypy>=1.19.1",
     "pytest>=9.0.2",
     "ruff>=0.15.5",
+    "ty>=0.0.34",
 ]
 
 [tool.ruff]
@@ -34,6 +34,9 @@ line-length = 79
 ignore_missing_imports = true
 strict = true
 files = ["src"]
+
+[tool.ty.src]
+include = ["src", "tests"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests",]
