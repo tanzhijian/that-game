@@ -1,11 +1,15 @@
 import polars as pl
 
-from .base import NAME_SEPARATOR, PREFIX, FieldAliases, Provider
+from .base import (
+    NAME_SEPARATOR,
+    PERIOD_TIME,
+    FieldAliases,
+    IndexColumns,
+    Provider,
+)
 
-_TYPE_NAME = f"{PREFIX}type"
 
-
-def _add_type_name(df: pl.DataFrame) -> pl.DataFrame:
+def _add_type(df: pl.DataFrame) -> pl.DataFrame:
     """Sportec 的事件数据中，事件类型信息分散在多个列中
     （例如 type.name, subType.name 等），需要合并成一个统一的 type_name 列。
 
@@ -43,16 +47,71 @@ def _add_type_name(df: pl.DataFrame) -> pl.DataFrame:
             .unique(maintain_order=True)
         )
         .list.join(NAME_SEPARATOR)
-        .alias(_TYPE_NAME)
+        .alias(IndexColumns.TYPE)
     )
+
+
+_period_mapping = {
+    "firstHalf": 1,
+    "secondHalf": 2,
+    # 3 4 5 是用来占位填充的，公开数据集并没有加时赛和点球
+    "extraFirstHalf": 3,
+    "extraSecondHalf": 4,
+    "shootout": 5,
+}
+
+
+def _add_period(df: pl.DataFrame) -> pl.DataFrame:
+    # 1. 先获取 period，后续时间标准化都依赖它
+    return df.with_columns(
+        pl.col("KickOff.@GameSection")
+        .replace_strict(_period_mapping, default=None)
+        .cast(pl.Int8)
+        .forward_fill()
+        .alias("std_period")
+    )
+
+
+def _add_time(df: pl.DataFrame) -> pl.DataFrame:
+    _event_time_expr = pl.col("@EventTime").str.to_datetime(
+        format="%Y-%m-%dT%H:%M:%S%.f%:z"
+    )
+    return df.with_columns(
+        # 2. 取当前 period 的第一条事件时间，作为该 period 的起点
+        (_event_time_expr - _event_time_expr.first().over("std_period"))
+        .dt.cast_time_unit("ms")
+        .alias(IndexColumns.TIME),
+    )
+
+
+def _add_full_time(df: pl.DataFrame) -> pl.DataFrame:
+    return df.with_columns(
+        # 3. full_time = period 起始分钟 + period 内相对时间
+        (
+            pl.col("std_time")
+            + (
+                pl.col("std_period").replace_strict(PERIOD_TIME).cast(pl.Int64)
+                * 60_000
+            ).cast(pl.Duration("ms"))
+        ).alias(IndexColumns.FULL_TIME),
+    )
+
+
+def _preprocess(df: pl.DataFrame) -> pl.DataFrame:
+    df = _add_type(df)
+    df = _add_full_time(_add_time(_add_period(df)))
+    return df
 
 
 sportec = Provider(
     data_type="xml",
     root="PutDataRequest.Event",
-    preprocess=_add_type_name,
+    preprocess=_preprocess,
     field_aliases=FieldAliases(
         id="@EventId",
-        type=_TYPE_NAME,
+        type=IndexColumns.TYPE,
+        period=IndexColumns.PERIOD,
+        time=IndexColumns.TIME,
+        full_time=IndexColumns.FULL_TIME,
     ),
 )

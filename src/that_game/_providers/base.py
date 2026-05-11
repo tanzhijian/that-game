@@ -5,7 +5,24 @@ from typing import Callable, Iterator, Literal
 import polars as pl
 
 NAME_SEPARATOR = ";"
-PREFIX = "std_"
+PERIOD_TIME = {
+    1: 0,
+    2: 45,
+    3: 90,
+    4: 105,
+    5: 120,
+}
+
+
+class IndexColumns:
+    _PREFIX = "std_"
+
+    TYPE = f"{_PREFIX}type"
+    PERIOD = f"{_PREFIX}period"
+    TIME = f"{_PREFIX}time"
+    FULL_TIME = f"{_PREFIX}full_time"
+
+    __slots__ = ()
 
 
 class FieldAliases(Mapping[str, str]):
@@ -14,11 +31,17 @@ class FieldAliases(Mapping[str, str]):
         *,
         id: str,
         type: str,
+        period: str,
+        time: str,
+        full_time: str,
         **kwargs: str,
     ) -> None:
         self._aliases = {
             "id": id,
             "type": type,
+            "period": period,
+            "time": time,
+            "full_time": full_time,
             **kwargs,
         }
 
