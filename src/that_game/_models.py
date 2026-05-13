@@ -1,73 +1,9 @@
-from datetime import timedelta
 from typing import Any, Self
 
 import polars as pl
 
 from ._expression import FilterExpression
-from ._providers.base import PERIOD_TIME, IndexColumns, Provider
-
-
-class Clock:
-    def __init__(
-        self,
-        period: int | None,
-        time: str | None,
-        full_time: str | None,
-    ) -> None:
-        """Supported formats:
-        - "MM:SS" (e.g., "05:49")
-        - "MM:SS.mmm" (e.g., "75:49.559")
-        """
-        self._period = period
-        self._time = self._parse_time(time) if time is not None else time
-        self._full_time = (
-            self._parse_time(full_time) if full_time is not None else full_time
-        )
-
-    def _parse_time(self, time_str: str) -> timedelta:
-        m_str, remainder = time_str.split(":")
-        if "." in remainder:
-            s_str, ms_str = remainder.split(".")
-        else:
-            s_str, ms_str = remainder, 0
-        return timedelta(
-            minutes=int(m_str), seconds=int(s_str), milliseconds=int(ms_str)
-        )
-
-    def _classify_timedelta(self, td: timedelta) -> int:
-        mins = td.total_seconds() / 60
-        for period, time in sorted(PERIOD_TIME.items(), reverse=True):
-            if mins >= time:
-                return period
-        return 1
-
-    def period(self) -> int:
-        if self._period is not None:
-            return self._period
-        if self._full_time is not None:
-            return self._classify_timedelta(self._full_time)
-        raise ValueError("Cannot determine period without period or full_time")
-
-    def time(self) -> timedelta:
-        if self._time is not None:
-            return self._time
-        if self._period is not None and self._full_time is not None:
-            period_time = timedelta(minutes=PERIOD_TIME[self._period])
-            return self._full_time - period_time
-        raise ValueError(
-            "Cannot determine time without time or both period and full_time"
-        )
-
-    def full_time(self) -> timedelta:
-        if self._full_time is not None:
-            return self._full_time
-        if self._period is not None and self._time is not None:
-            period_time = timedelta(minutes=PERIOD_TIME[self._period])
-            return period_time + self._time
-        raise ValueError(
-            "Cannot determine full_time without full_time or both "
-            "period and time"
-        )
+from ._providers.base import IndexColumns, Provider
 
 
 def _set_nested_value(
