@@ -1,12 +1,6 @@
 import polars as pl
 
-from .base import (
-    NAME_SEPARATOR,
-    PERIOD_TIME,
-    FieldAliases,
-    IndexColumns,
-    Provider,
-)
+from .base import NAME_SEPARATOR, PERIOD_MINUTES, ExtraNames, Provider
 
 
 def _add_type(df: pl.DataFrame) -> pl.DataFrame:
@@ -20,7 +14,7 @@ def _add_type(df: pl.DataFrame) -> pl.DataFrame:
     return df.with_columns(
         pl.concat_list([pl.col(col) for col in type_cols])
         .list.join(NAME_SEPARATOR)
-        .alias(IndexColumns.TYPE)
+        .alias(ExtraNames.TYPE)
     )
 
 
@@ -48,7 +42,7 @@ def _add_time(df: pl.DataFrame) -> pl.DataFrame:
         (
             pl.col("std_full_time")
             - (
-                pl.col("period").replace_strict(PERIOD_TIME).cast(pl.Int64)
+                pl.col("period").replace_strict(PERIOD_MINUTES).cast(pl.Int64)
                 * 60_000
             ).cast(pl.Duration("ms"))
         ).alias("std_time"),
@@ -64,11 +58,10 @@ def _preprocess(df: pl.DataFrame) -> pl.DataFrame:
 skillcorner = Provider(
     data_type="csv",
     preprocess=_preprocess,
-    field_aliases=FieldAliases(
-        id="event_id",
-        type=IndexColumns.TYPE,
-        period="period",
-        time=IndexColumns.TIME,
-        full_time=IndexColumns.FULL_TIME,
-    ),
+    field_aliases={
+        "id": "event_id",
+        "type": ExtraNames.TYPE,
+        "time": ExtraNames.TIME,
+        "full_time": ExtraNames.FULL_TIME,
+    },
 )

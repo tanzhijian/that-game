@@ -1,6 +1,6 @@
 import polars as pl
 
-from .base import PERIOD_TIME, FieldAliases, IndexColumns, Provider
+from .base import PERIOD_MINUTES, ExtraNames, Provider
 
 
 def _add_time(df: pl.DataFrame) -> pl.DataFrame:
@@ -12,7 +12,7 @@ def _add_time(df: pl.DataFrame) -> pl.DataFrame:
             - pl.time(0, 0, 0)  # 2. 减去参考点 00:00:00 得到 Duration
         )
         .dt.cast_time_unit("ms")
-        .alias(IndexColumns.TIME)
+        .alias(ExtraNames.TIME)
     )
 
 
@@ -22,7 +22,7 @@ def _add_full_time(df: pl.DataFrame) -> pl.DataFrame:
         (
             pl.col("std_time")
             + (
-                pl.col("period").replace_strict(PERIOD_TIME).cast(pl.Int64)
+                pl.col("period").replace_strict(PERIOD_MINUTES).cast(pl.Int64)
                 * 60_000
             ).cast(pl.Duration("ms"))
         ).alias("std_full_time")
@@ -37,12 +37,10 @@ def _preprocess(df: pl.DataFrame) -> pl.DataFrame:
 statsbomb = Provider(
     data_type="json",
     root=".",
-    field_aliases=FieldAliases(
-        id="id",
-        type="type.name",
-        period="period",
-        time=IndexColumns.TIME,
-        full_time=IndexColumns.FULL_TIME,
-    ),
+    field_aliases={
+        "type": "type.name",
+        "time": ExtraNames.TIME,
+        "full_time": ExtraNames.FULL_TIME,
+    },
     preprocess=_preprocess,
 )

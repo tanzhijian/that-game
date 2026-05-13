@@ -3,7 +3,7 @@ from typing import Any, Self
 import polars as pl
 
 from ._expression import FilterExpression
-from ._providers.base import IndexColumns, Provider
+from ._providers.base import ExtraNames, Provider
 
 
 def _set_nested_value(
@@ -37,9 +37,9 @@ def _to_nested_dicts(
     return nested_items
 
 
-def _drop_null_and_index_columns(df: pl.DataFrame) -> pl.DataFrame:
+def _drop_null_and_extra(df: pl.DataFrame) -> pl.DataFrame:
     null_cols = [c for c in df.columns if df[c].null_count() == df.height]
-    return df.drop(null_cols, f"^{IndexColumns._PREFIX}.*$")
+    return df.drop(null_cols, f"^{ExtraNames._PREFIX}.*$")
 
 
 class Records:
@@ -52,12 +52,12 @@ class Records:
         return len(self.data)
 
     def to_dict(self, separator: str = ".") -> list[dict[str, Any]]:
-        data = _drop_null_and_index_columns(self.data)
+        data = _drop_null_and_extra(self.data)
         return _to_nested_dicts(data, separator=separator)
 
     def sample(self) -> dict[str, Any]:
         row = self.data.sample(1)
-        row = _drop_null_and_index_columns(row)
+        row = _drop_null_and_extra(row)
         return _to_nested_dicts(row)[0]
 
     def filter(
@@ -84,7 +84,7 @@ class Records:
         data = self.data.filter(mask)
 
         if drop_null_columns:
-            data = _drop_null_and_index_columns(data)
+            data = _drop_null_and_extra(data)
 
         records = type(self)(data, self.provider)
         if len(records) < 1:

@@ -1,12 +1,6 @@
 import polars as pl
 
-from .base import (
-    NAME_SEPARATOR,
-    PERIOD_TIME,
-    FieldAliases,
-    IndexColumns,
-    Provider,
-)
+from .base import NAME_SEPARATOR, PERIOD_MINUTES, ExtraNames, Provider
 
 
 def _add_type(df: pl.DataFrame) -> pl.DataFrame:
@@ -47,7 +41,7 @@ def _add_type(df: pl.DataFrame) -> pl.DataFrame:
             .unique(maintain_order=True)
         )
         .list.join(NAME_SEPARATOR)
-        .alias(IndexColumns.TYPE)
+        .alias(ExtraNames.TYPE)
     )
 
 
@@ -80,7 +74,7 @@ def _add_time(df: pl.DataFrame) -> pl.DataFrame:
         # 2. 取当前 period 的第一条事件时间，作为该 period 的起点
         (_event_time_expr - _event_time_expr.first().over("std_period"))
         .dt.cast_time_unit("ms")
-        .alias(IndexColumns.TIME),
+        .alias(ExtraNames.TIME),
     )
 
 
@@ -90,10 +84,12 @@ def _add_full_time(df: pl.DataFrame) -> pl.DataFrame:
         (
             pl.col("std_time")
             + (
-                pl.col("std_period").replace_strict(PERIOD_TIME).cast(pl.Int64)
+                pl.col("std_period")
+                .replace_strict(PERIOD_MINUTES)
+                .cast(pl.Int64)
                 * 60_000
             ).cast(pl.Duration("ms"))
-        ).alias(IndexColumns.FULL_TIME),
+        ).alias(ExtraNames.FULL_TIME),
     )
 
 
@@ -107,11 +103,11 @@ sportec = Provider(
     data_type="xml",
     root="PutDataRequest.Event",
     preprocess=_preprocess,
-    field_aliases=FieldAliases(
-        id="@EventId",
-        type=IndexColumns.TYPE,
-        period=IndexColumns.PERIOD,
-        time=IndexColumns.TIME,
-        full_time=IndexColumns.FULL_TIME,
-    ),
+    field_aliases={
+        "id": "@EventId",
+        "type": ExtraNames.TYPE,
+        "period": ExtraNames.PERIOD,
+        "time": ExtraNames.TIME,
+        "full_time": ExtraNames.FULL_TIME,
+    },
 )

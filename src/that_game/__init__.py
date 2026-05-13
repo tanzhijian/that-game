@@ -1,11 +1,10 @@
 from . import expression, providers
 from ._loader import load_events, load_tracking
 from ._models import Events, Records, Tracking
-from ._providers.base import FieldAliases, Provider
+from ._providers.base import Provider
 
 __all__ = (
     "Events",
-    "FieldAliases",
     "Records",
     "Tracking",
     "providers",

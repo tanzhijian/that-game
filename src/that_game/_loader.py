@@ -24,16 +24,13 @@ def _read_text_if_path(source: Any) -> str:
 
 
 def _flatten_structs(df: pl.DataFrame, separator: str = ".") -> pl.DataFrame:
-    # 检查当前是否还有结构体列
     struct_cols = [n for n, d in df.schema.items() if isinstance(d, pl.Struct)]
-
     if not struct_cols:
         return df
 
     exprs = []
     for col_name, dtype in df.schema.items():
         if isinstance(dtype, pl.Struct):
-            # 一次性展开该结构体的所有子列
             for field in dtype.fields:
                 exprs.append(
                     pl.col(col_name)
@@ -43,7 +40,6 @@ def _flatten_structs(df: pl.DataFrame, separator: str = ".") -> pl.DataFrame:
         else:
             exprs.append(pl.col(col_name))
 
-    # 核心优化：一次 select 完成一层所有转换，减少中间 DataFrame 生成
     return _flatten_structs(df.select(exprs), separator)
 
 
@@ -92,10 +88,8 @@ def _load_df(source: Any, provider: Provider) -> pl.DataFrame:
                     f"Unsupported data type: {provider.data_type}"
                 )
 
-    # 碾平
     df = _flatten_structs(df)
 
-    # 读取完成前，针对数据供应商的不同，特殊处理一些字段
     if provider.preprocess is not None:
         df = provider.preprocess(df)
     return df
