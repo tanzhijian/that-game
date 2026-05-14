@@ -49,9 +49,13 @@ def _add_time(df: pl.DataFrame) -> pl.DataFrame:
     )
 
 
+def _add_clock(df: pl.DataFrame) -> pl.DataFrame:
+    return _add_time(_add_full_time(df))
+
+
 def _preprocess(df: pl.DataFrame) -> pl.DataFrame:
     df = _add_type(df)
-    df = _add_time(_add_full_time(df))
+    df = _add_clock(df)
     return df
 
 

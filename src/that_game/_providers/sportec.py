@@ -13,7 +13,7 @@ def _add_type(df: pl.DataFrame) -> pl.DataFrame:
     然后通过 list.explode 将分割后的列表展开成多行。
     3. 再次使用 list.eval 对每个元素进行过滤，
     去除以 "@" 开头的字符串和空字符串，并保持唯一性。
-    4. 最后通过 list.join 将剩余的元素用 ";" 连接起来，形成最终的 type_name 列
+    4. 最后通过 list.join 将剩余的元素用 ";" 连接起来，形成最终的 type 列
     """
     type_cols = df.columns[7:]
 
@@ -92,10 +92,12 @@ def _add_full_time(df: pl.DataFrame) -> pl.DataFrame:
         ).alias(ExtraNames.FULL_TIME),
     )
 
+def _add_clock(df: pl.DataFrame) -> pl.DataFrame:
+    return _add_full_time(_add_time(_add_period(df)))
 
 def _preprocess(df: pl.DataFrame) -> pl.DataFrame:
     df = _add_type(df)
-    df = _add_full_time(_add_time(_add_period(df)))
+    df = _add_clock(df)
     return df
 
 

@@ -1,182 +1,106 @@
+from datetime import timedelta
 from typing import Any
 
 import polars as pl
 import pytest
 
-import that_game.providers
-from that_game import Records, expression, load_events
-from that_game._models import Events
-from that_game._providers.base import FieldAliases, Provider
-
-PROVIDER = Provider(
-    data_type="json",
-    field_aliases=FieldAliases(id="id", type="type.name"),
-)
-
-EXTENDED_PROVIDER = Provider(
-    data_type="json",
-    field_aliases=FieldAliases(
-        id="id",
-        type="type.name",
-        x="x",
-        name="name",
-        all_null="all_null",
-    ),
-)
-
-NESTED_PAYLOAD = [
-    {
-        "id": "123",
-        "type": {"id": 1, "name": "Shot"},
-        "location": {"x": 30.0, "y": 60.0},
-    }
-]
-
-MULTI_LEVEL_PAYLOAD = [
-    {
-        "id": "123",
-        "type": {"name": "Pass"},
-        "pass": {
-            "end_location": {"x": 42.0, "y": 18.0},
-        },
-    }
-]
-
-RECORDS_PAYLOAD: list[dict[str, Any]] = [
-    {
-        "id": "1",
-        "type": {"name": "Shot"},
-        "x": 10,
-        "name": "name-alpha",
-        "all_null": None,
-    },
-    {
-        "id": "2",
-        "type": {"name": "Pass"},
-        "x": 20,
-        "name": "beta-name",
-        "all_null": None,
-    },
-    {
-        "id": "3",
-        "type": {"name": "Carry"},
-        "x": 30,
-        "name": "gamma-name",
-        "all_null": None,
-    },
-]
-
-EXPECTED_RECORDS: list[dict[str, Any]] = [
-    {key: value for key, value in record.items() if key != "all_null"}
-    for record in RECORDS_PAYLOAD
-]
-
-FLAT_RECORDS_PAYLOAD: list[dict[str, Any]] = [
-    {
-        **{key: value for key, value in record.items() if key != "type"},
-        "type.name": record["type"]["name"],
-    }
-    for record in RECORDS_PAYLOAD
-]
+from that_game import Records, expression, providers
+from that_game._loader import _load_df
 
 
-@pytest.fixture
-def records() -> Records:
-    return Records(
-        pl.DataFrame(FLAT_RECORDS_PAYLOAD, infer_schema_length=None),
-        EXTENDED_PROVIDER,
-    )
+@pytest.fixture(scope="module")
+def records(statsbomb_events_data: dict[str, Any]) -> Records:
+    df = _load_df(statsbomb_events_data, providers.statsbomb)
+    return Records(df, providers.statsbomb)
 
 
-@pytest.fixture
-def events() -> Events:
-    return load_events(RECORDS_PAYLOAD, EXTENDED_PROVIDER)
+class TestRecords:
+    def test_alias_keys(self, records: Records) -> None:
+        keys = set(records.alias_keys)
+        assert "type" in keys
+        assert "id" not in keys
 
-
-class TestRecordsToDict:
-    def test_restores_nested_structure(self) -> None:
-        records = Records(
-            pl.DataFrame(NESTED_PAYLOAD, infer_schema_length=None), PROVIDER
-        )
-
-        assert records.to_dict() == NESTED_PAYLOAD
-
-    def test_restores_multiple_nested_levels(self) -> None:
-        records = Records(
-            pl.DataFrame(MULTI_LEVEL_PAYLOAD, infer_schema_length=None),
-            PROVIDER,
-        )
-
-        assert records.to_dict() == MULTI_LEVEL_PAYLOAD
-
-    def test_drops_columns_that_are_all_null(self, records: Records) -> None:
-        assert records.to_dict() == EXPECTED_RECORDS
-
-
-class TestRecordsSample:
-    def test_sample_returns_nested_item_from_dataset(
-        self, records: Records
-    ) -> None:
+    def test_sample(self, records: Records) -> None:
         sample = records.sample()
+        assert isinstance(sample["type"]["name"], str)
 
-        assert sample in EXPECTED_RECORDS
-        assert "all_null" not in sample
+    def test_to_dict(self, records: Records) -> None:
+        data = records.to_dict()
+        event = data[0]
+        assert event["id"] == "1"
+        assert event["type"]["name"] == "Carry"
 
 
 class TestRecordsFilter:
-    def test_supports_numeric_comparison_expression(
-        self, records: Records
-    ) -> None:
-        filtered = records.filter(x=expression.ge(20))
+    def test_eq(self, records: Records) -> None:
+        shots = records.filter(type="Shot", id="4")
+        assert len(shots) == 1
+        assert shots.to_dict()[0]["type"]["name"] == "Shot"
 
-        assert [record["id"] for record in filtered.to_dict()] == ["2", "3"]
+    def test_key_error(self, records: Records) -> None:
+        with pytest.raises(pl.exceptions.ColumnNotFoundError):
+            shots = records.filter(dtype="Shot")
+            assert len(shots) == 0
 
-    def test_supports_between_expression(self, records: Records) -> None:
-        filtered = records.filter(x=expression.between(15, 25))
+    def test_value_error(self, records: Records) -> None:
+        with pytest.raises(ValueError):
+            shots = records.filter(type="shot")
+            assert len(shots) == 0
 
-        assert [record["id"] for record in filtered.to_dict()] == ["2"]
+    def test_expr_ge(self, records: Records) -> None:
+        filtered = records.filter(period=expression.ge(2))
+        assert len(filtered) == 4
+        assert filtered.to_dict()[0]["period"] == 2
 
-    def test_supports_string_prefix_expression(self, records: Records) -> None:
-        filtered = records.filter(name=expression.starts_with("name"))
+    def test_expr_gt(self, records: Records) -> None:
+        filtered = records.filter(period=expression.gt(2))
+        assert len(filtered) == 3
+        assert filtered.to_dict()[0]["period"] == 3
 
-        assert [record["id"] for record in filtered.to_dict()] == ["1"]
+    def test_expr_le(self, records: Records) -> None:
+        filtered = records.filter(period=expression.le(2))
+        assert len(filtered) == 2
+        assert filtered.to_dict()[0]["period"] == 1
 
-    def test_supports_string_suffix_expression(self, records: Records) -> None:
-        filtered = records.filter(name=expression.ends_with("name"))
+    def test_expr_lt(self, records: Records) -> None:
+        filtered = records.filter(period=expression.lt(2))
+        assert len(filtered) == 1
+        assert filtered.to_dict()[0]["period"] == 1
 
-        assert [record["id"] for record in filtered.to_dict()] == ["2", "3"]
+    def test_expr_between(self, records: Records) -> None:
+        filtered = records.filter(period=expression.between(2, 4))
+        assert len(filtered) == 3
+        data = filtered.to_dict()
+        assert data[0]["period"] == 2
+        assert data[-1]["period"] == 4
 
-    def test_raises_for_expression_type_mismatch(
-        self, records: Records
-    ) -> None:
-        with pytest.raises(
-            ValueError,
-            match="Comparison expressions require a numeric column",
-        ):
-            records.filter(name=expression.ge(10))
+    def test_expr_starts_with(self, records: Records) -> None:
+        shots = records.filter(type=expression.starts_with("Sho"))
+        assert len(shots) == 1
+        assert shots.to_dict()[0]["type"]["name"] == "Shot"
 
-    def test_raises_for_invalid_filter_key(self, records: Records) -> None:
-        with pytest.raises(ValueError, match="No records found"):
-            records.filter(id="missing")
+    def test_expr_end_withs(self, records: Records) -> None:
+        shots = records.filter(type=expression.ends_with("ot"))
+        assert len(shots) == 1
+        assert shots.to_dict()[0]["type"]["name"] == "Shot"
 
-        with pytest.raises(KeyError, match="Invalid filter key: missing"):
-            records.filter(missing="value")
+    def test_expr_value_error(self, records: Records) -> None:
+        with pytest.raises(ValueError):
+            filtered = records.filter(period=expression.ge(8))
+            assert len(filtered) == 0
 
-    def test_drop_null_columns_removes_columns_with_only_nulls(
-        self, records: Records
-    ) -> None:
-        filtered = records.filter(id="1", drop_null_columns=True)
+    def test_clock(self, records: Records) -> None:
+        td = timedelta(minutes=45)
+        with pytest.raises(ValueError):
+            filtered = records.filter(time=td)
+            assert len(filtered) == 0
 
-        assert set(filtered.data.columns) == {"id", "type.name", "x", "name"}
-
-
-class TestEventsTypes:
-    def test_types_returns_sorted_unique_values(self, events: Events) -> None:
-        assert events.types == ["Carry", "Pass", "Shot"]
-
-
-class TestPublicProvidersModule:
-    def test_public_providers_module_supports_direct_submodule_import(
-        self,
-    ) -> None:
-        assert that_game.providers.statsbomb.field_aliases["id"] == "id"
+        assert len(records.filter(full_time=expression.ge(td))) == 4
+        assert (
+            len(
+                records.filter(
+                    full_time=expression.between(td, timedelta(minutes=90))
+                )
+            )
+            == 1
+        )

@@ -51,6 +51,10 @@ class Records:
     def __len__(self) -> int:
         return len(self.data)
 
+    @property
+    def alias_keys(self) -> list[str]:
+        return list(self.aliases.keys())
+
     def to_dict(self, separator: str = ".") -> list[dict[str, Any]]:
         data = _drop_null_and_extra(self.data)
         return _to_nested_dicts(data, separator=separator)
@@ -68,13 +72,7 @@ class Records:
     ) -> Self:
         mask = pl.lit(True)
         for key, value in kwargs.items():
-            if key not in self.aliases:
-                raise KeyError(
-                    f"Invalid filter key: {key}, "
-                    f"expected one of {list(self.aliases.keys())}"
-                )
-
-            column_name = self.aliases[key]
+            column_name = self.aliases.get(key, key)
             column = pl.col(column_name)
             if isinstance(value, FilterExpression):
                 dtype = self.data.schema[column_name]
