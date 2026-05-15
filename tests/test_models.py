@@ -79,7 +79,7 @@ class TestRecordsFilter:
         assert len(shots) == 1
         assert shots.to_dict()[0]["type"]["name"] == "Shot"
 
-    def test_expr_end_withs(self, records: Records) -> None:
+    def test_expr_ends_with(self, records: Records) -> None:
         shots = records.filter(type=expression.ends_with("ot"))
         assert len(shots) == 1
         assert shots.to_dict()[0]["type"]["name"] == "Shot"

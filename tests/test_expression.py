@@ -1,111 +1,111 @@
-from typing import Any  # 这里暂时使用 Any, 等到后续调整了类型后再修改
+from datetime import timedelta
 
 import polars as pl
 import pytest
 
-import that_game.expression
 from that_game import expression
 
-
-class TestComparisonExpressions:
-    @pytest.mark.parametrize(
-        ("factory", "value", "operator"),
-        [
-            (expression.gt, 1, ">"),
-            (expression.ge, 10, ">="),
-            (expression.lt, 3, "<"),
-            (expression.le, 2, "<="),
+df = pl.DataFrame(
+    {
+        "name": ["Alice", "Bob", "Charlie", "David", "Eve"],
+        "age": [25, 30, 35, 28, 22],
+        "score": [85.5, 90.0, 78.0, 92.5, 88.0],
+        "td": [
+            timedelta(minutes=1),
+            timedelta(minutes=2),
+            timedelta(minutes=3),
+            timedelta(minutes=4),
+            timedelta(minutes=5),
         ],
-    )
-    def test_compare_factories_create_expected_operators(
-        self,
-        factory: Any,
-        value: int,
-        operator: str,
-    ) -> None:
-        expr = factory(value)
-
-        assert expr.operator == operator
-        assert expr.value == value
-
-    def test_between_stores_bounds(self) -> None:
-        expr = expression.between(5, 10)
-
-        assert expr.lower == 5
-        assert expr.upper == 10
-
-    @pytest.mark.parametrize(
-        ("factory", "args", "message"),
-        [
-            (
-                expression.ge,
-                (10,),
-                "Comparison expressions require a numeric column",
-            ),
-            (
-                expression.between,
-                (1, 2),
-                "Between expressions require a numeric column",
-            ),
-        ],
-    )
-    def test_numeric_expressions_reject_non_numeric_columns(
-        self,
-        factory: Any,
-        args: tuple[int, ...],
-        message: str,
-    ) -> None:
-        with pytest.raises(
-            ValueError,
-            match=message,
-        ):
-            factory(*args).build(pl.col("name"), pl.String)
+    }
+)
 
 
-class TestStringExpressions:
-    @pytest.mark.parametrize(
-        ("factory", "value"),
-        [
-            (expression.starts_with, "prefix"),
-            (expression.ends_with, "suffix"),
-        ],
-    )
-    def test_string_factories_store_value(
-        self,
-        factory: Any,
-        value: str,
-    ) -> None:
-        expr = factory(value)
-
-        assert expr.value == value
-
-    @pytest.mark.parametrize(
-        ("factory", "message"),
-        [
-            (
-                expression.starts_with,
-                "starts_with expressions require a string column",
-            ),
-            (
-                expression.ends_with,
-                "ends_with expressions require a string column",
-            ),
-        ],
-    )
-    def test_string_expressions_reject_non_string_columns(
-        self,
-        factory: Any,
-        message: str,
-    ) -> None:
-        with pytest.raises(
-            ValueError,
-            match=message,
-        ):
-            factory("name").build(pl.col("x"), pl.Int64)
+@pytest.mark.parametrize(
+    ("column_name", "value", "counts"),
+    (
+        ("age", 28, (2, 3, 2, 3)),
+        ("score", 80.0, (4, 4, 1, 1)),
+        ("td", timedelta(minutes=3), (2, 3, 2, 3)),
+    ),
+)
+def test_compare(
+    column_name: str,
+    value: int | float | timedelta,
+    counts: tuple[int, ...],
+) -> None:
+    column = pl.col(column_name)
+    dtype = df.schema[column_name]
+    factories = (expression.gt, expression.ge, expression.lt, expression.le)
+    for i, factory in enumerate(factories):
+        compare = factory(value)
+        expr = compare.build(column, dtype)
+        filtered = df.filter(expr)
+        assert len(filtered) == counts[i]
 
 
-class TestPublicExpressionModule:
-    def test_public_expression_module_supports_direct_submodule_import(
-        self,
-    ) -> None:
-        assert that_game.expression.ge(1).value == 1
+def test_compare_error() -> None:
+    compare = expression.gt(30)
+    with pytest.raises(
+        ValueError,
+        match="Comparison expressions require a numeric or duration column",
+    ):
+        compare.build(pl.col("name"), df.schema["name"])
+
+
+@pytest.mark.parametrize(
+    ("column_name", "values", "count"),
+    (
+        ("age", (28, 35), 3),
+        ("score", (80.0, 91.0), 3),
+        ("td", (timedelta(minutes=2), timedelta(minutes=4)), 3),
+    ),
+)
+def test_between(
+    column_name: str,
+    values: tuple[int | float | timedelta, int | float | timedelta],
+    count: int,
+) -> None:
+    column = pl.col(column_name)
+    dtype = df.schema[column_name]
+    between = expression.between(*values)
+    expr = between.build(column, dtype)
+    filtered = df.filter(expr)
+    assert len(filtered) == count
+
+
+def test_between_error() -> None:
+    between = expression.between(20, 30)
+    with pytest.raises(
+        ValueError,
+        match="Between expressions require a numeric or duration column",
+    ):
+        between.build(pl.col("name"), df.schema["name"])
+
+
+def test_starts_with() -> None:
+    expr = expression.starts_with("A")
+    filtered = df.filter(expr.build(pl.col("name"), df.schema["name"]))
+    assert len(filtered) == 1
+
+
+def test_starts_with_error() -> None:
+    expr = expression.starts_with("A")
+    with pytest.raises(
+        ValueError, match="starts_with expressions require a string column"
+    ):
+        expr.build(pl.col("age"), df.schema["age"])
+
+
+def test_ends_with() -> None:
+    expr = expression.ends_with("e")
+    filtered = df.filter(expr.build(pl.col("name"), df.schema["name"]))
+    assert len(filtered) == 3
+
+
+def test_ends_with_error() -> None:
+    expr = expression.ends_with("e")
+    with pytest.raises(
+        ValueError, match="ends_with expressions require a string column"
+    ):
+        expr.build(pl.col("age"), df.schema["age"])
